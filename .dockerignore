@@ -1,0 +1,8 @@
+# El contexto de construcción es la raíz del repo (los Dockerfiles necesitan el pom padre y contracts).
+**/target/
+.git/
+.idea/
+.vscode/
+docs/
+tests/
+scripts/
