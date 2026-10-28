@@ -1,0 +1,8 @@
+# Fin de línea LF en todo el repo: los scripts y archivos CLI se ejecutan dentro de contenedores Linux.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.pdf binary
+*.zip binary
+*.jar binary

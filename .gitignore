@@ -1,0 +1,18 @@
+target/
+*.class
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Paquete de entrega (se genera al final, no se versiona)
+Taller4_Entrega.zip
