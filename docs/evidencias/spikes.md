@@ -55,5 +55,31 @@ Configuración de WildFly: `standalone.xml` por defecto, sin scripts CLI.
 3. **DTO como JavaBeans:** confirmados con JSF/EL en Tomcat y con el marshalling de WildFly.
 4. **Tomcat:** el WAR lleva `WEB-INF/beans.xml` (`annotated`), `web.xml` con `FacesServlet` en `*.xhtml` y
    `META-INF/context.xml` con el recurso `BeanManager` de Weld.
-5. **Pendiente (Rol 1, F2):** configurar los timeouts del cliente EJB para que la caída de una capa se reporte en
-   pocos segundos y no en ~72 s (QA-DIS-1).
+5. **Timeout de invocación (resuelto en F2, 2026-10-28):** la demora venía de la primera llamada tras la caída,
+   que esperaba sobre la conexión TCP ya abierta (72–135 s); las siguientes fallaban al instante.
+   `org.jboss.ejb.client.max-retries` y `org.jboss.ejb.client.discovery.timeout` no cambian ese caso. La propiedad
+   JNDI `invocation.timeout` sí:
+
+   | Configuración | 1.ª llamada con `data` caído | Al reiniciar `data` |
+   |---|---|---|
+   | Sin timeout | 135 s, `EJBCLIENT000409: No more destinations are available` | Se recupera sin reiniciar `logic` ni `web` |
+   | `invocation.timeout=10000` | 10 s, `EJBException: TimeoutException: No invocation response received in 10000 milliseconds` | Se recupera (4 s, incluye la primera conexión) |
+
+   Se adopta 5000 ms por defecto (`EJB_INVOCATION_TIMEOUT_MS`) y la política queda en un solo lugar:
+   `contracts/RemoteEjbLocator`.
+
+## Capa de Datos real (F2, 2026-10-28)
+
+Se reemplazó el `data` en memoria del spike por la imagen real (`infra/wildfly/Dockerfile`, `MODULE=data`: JPA +
+JTA + datasource `RecursosDS` sobre PostgreSQL 16) y se repitió el recorrido con el `logic` y el Tomcat del spike:
+RF-1..RF-5 y los tres errores de negocio responden igual, y las filas quedan en la tabla `resource_request`:
+
+```
+ id | disaster_description | resource_type | quantity | priority |  status
+----+----------------------+---------------+----------+----------+-----------
+  1 | Inundacion Mocoa     | Agua          |      100 | ALTA     | ATENDIDA
+  2 | Incendio             | Carpas        |        5 | MEDIA    | PENDIENTE
+```
+
+Hallazgo de infraestructura: el marcador `data.war.deployed` sobrevivía a `docker compose stop/start` y el
+healthcheck daba "sano" antes del redespliegue. `infra/wildfly/entrypoint.sh` ahora borra los marcadores al arrancar.

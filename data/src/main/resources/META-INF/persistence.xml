@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<persistence xmlns="https://jakarta.ee/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="3.0">
+    <persistence-unit name="recursosPU" transaction-type="JTA">
+        <!-- Datasource creado por infra/wildfly/data/datasource.cli -->
+        <jta-data-source>java:jboss/datasources/RecursosDS</jta-data-source>
+        <class>co.edu.javeriana.recursos.data.entity.ResourceRequestEntity</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <!-- El esquema lo crea infra/postgres/init/001_schema.sql; Hibernate solo lo valida al arrancar -->
+            <property name="hibernate.hbm2ddl.auto" value="validate"/>
+        </properties>
+    </persistence-unit>
+</persistence>

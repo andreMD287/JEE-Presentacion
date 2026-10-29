@@ -1,0 +1,5 @@
+# Identificador de nodo de transacciones único por servidor (WFLYTX0013). Se resuelve al arrancar desde
+# TX_NODE_ID, que docker-compose.yml fija con el nombre de la capa (data, logic, services).
+embed-server --std-out=echo
+/subsystem=transactions:write-attribute(name=node-identifier,value="${env.TX_NODE_ID:wildfly}")
+stop-embedded-server

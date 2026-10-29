@@ -1,0 +1,119 @@
+# Taller 4: capas en servidores separados.
+#   Etapa 1: presentation (Tomcat) -> logic (WildFly) -> data (WildFly) -> postgres
+#   Etapa 2/3: services (WildFly, REST + SOAP) -> logic; gateway (Kong) delante de REST [F4]
+# Arranque: docker compose up -d --build --wait
+
+x-ejb-credentials: &ejb-credentials
+  EJB_USER: ${EJB_USER:-ejbuser}
+  EJB_PASSWORD: ${EJB_PASSWORD:-Ejb.Pass2026}
+  # Tiempo máximo de una llamada EJB remota: si una capa cae, el cliente lo sabe en 5 s (QA-DIS-1)
+  EJB_INVOCATION_TIMEOUT_MS: ${EJB_INVOCATION_TIMEOUT_MS:-5000}
+
+x-wildfly-health: &wildfly-health
+  interval: 5s
+  timeout: 3s
+  retries: 40
+  start_period: 20s
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: recursos
+      POSTGRES_USER: ${DB_USER:-recursos}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-recursos}
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-recursos} -d recursos"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  data:
+    build:
+      context: .
+      dockerfile: infra/wildfly/Dockerfile
+      args:
+        MODULE: data
+    image: jee-presentacion/data:latest
+    environment:
+      <<: *ejb-credentials
+      TX_NODE_ID: data
+      DB_URL: jdbc:postgresql://postgres:5432/recursos
+      DB_USER: ${DB_USER:-recursos}
+      DB_PASSWORD: ${DB_PASSWORD:-recursos}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # WildFly crea este marcador cuando el WAR quedó desplegado (y .failed si falló)
+      test: ["CMD-SHELL", "test -f /opt/jboss/wildfly/standalone/deployments/data.war.deployed"]
+      <<: *wildfly-health
+
+  logic:
+    build:
+      context: .
+      dockerfile: infra/wildfly/Dockerfile
+      args:
+        MODULE: logic
+    image: jee-presentacion/logic:latest
+    environment:
+      <<: *ejb-credentials
+      TX_NODE_ID: logic
+      DATA_URL: remote+http://data:8080
+    depends_on:
+      data:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /opt/jboss/wildfly/standalone/deployments/logic.war.deployed"]
+      <<: *wildfly-health
+
+  services:
+    build:
+      context: .
+      dockerfile: infra/wildfly/Dockerfile
+      args:
+        MODULE: services
+    image: jee-presentacion/services:latest
+    environment:
+      <<: *ejb-credentials
+      TX_NODE_ID: services
+      LOGIC_URL: remote+http://logic:8080
+    ports:
+      - "8082:8080"
+    depends_on:
+      logic:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /opt/jboss/wildfly/standalone/deployments/services.war.deployed"]
+      <<: *wildfly-health
+
+  presentation:
+    build:
+      context: .
+      dockerfile: infra/tomcat/Dockerfile
+    image: jee-presentacion/presentation:latest
+    environment:
+      <<: *ejb-credentials
+      BACKEND_MODE: ${BACKEND_MODE:-ejb}
+      LOGIC_URL: remote+http://logic:8080
+      GATEWAY_URL: http://gateway:8000/api/v1
+      API_KEY: ${API_KEY:-clave-taller4}
+    ports:
+      - "8080:8080"
+    depends_on:
+      logic:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs -o /dev/null http://localhost:8080/recursos/ || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 40
+      start_period: 20s
+
+volumes:
+  postgres_data:

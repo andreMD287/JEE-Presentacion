@@ -29,7 +29,13 @@ Motivos: la EL de Tomcat 10.1 (EL 5.0) no lee componentes de `record` en JSF (`#
 | `ResourceRequestDataServiceBean` | `data.war` | `ejb:/data/ResourceRequestDataServiceBean!co.edu.javeriana.recursos.contracts.ResourceRequestDataService` |
 
 - Protocolo `remote+http` sobre el puerto 8080 interno del contenedor; autenticación con usuario de aplicación de WildFly (`EJB_USER` / `EJB_PASSWORD`).
-- Conexión: contexto JNDI programático (`WildFlyInitialContextFactory` + `PROVIDER_URL` + credenciales). Probado en los spikes S-1 y S-2; código de ejemplo en `docs/evidencias/spikes.md`.
+- Conexión: **usar siempre `RemoteEjbLocator`** (en `contracts`), que arma el contexto JNDI programático (`WildFlyInitialContextFactory` + URL + credenciales) y fija el timeout de invocación:
+  ```java
+  ResourceRequestDataService data = RemoteEjbLocator.lookup("DATA_URL", JndiNames.DATA_SERVICE, ResourceRequestDataService.class);
+  ResourceRequestService logic = RemoteEjbLocator.lookup("LOGIC_URL", JndiNames.LOGIC_SERVICE, ResourceRequestService.class);
+  ```
+  El proxy se puede guardar y reutilizar (es seguro entre hilos y se reconecta cuando la capa vuelve).
+- Timeout: `EJB_INVOCATION_TIMEOUT_MS` (5000 por defecto). Si la capa remota cae, la llamada lanza `jakarta.ejb.EJBException` (causa `TimeoutException`) o `org.jboss.ejb.client.RequestSendFailedException` en ≤ 5 s; el cliente debe mostrar un mensaje controlado (QA-DIS-1). Sin timeout la primera falla tardaba ~135 s.
 - Transacciones: JTA **local a Datos**; cada llamada remota a Datos es su propia transacción (D-11). El bean de Lógica lleva `@TransactionAttribute(NOT_SUPPORTED)` a nivel de clase: el spike S-2 mostró que con `REQUIRED` la transacción se propaga a Datos.
 
 ## 3. REST (`services`, etapa ②③)
@@ -73,4 +79,4 @@ Errores con el **mismo cuerpo del T2**: `{"code": "...", "message": "...", "time
 | `data` | ídem | — | solo red interna |
 | `postgres` | `postgres:16-alpine` | 5434 | — |
 
-Variables de entorno: `LOGIC_URL`, `DATA_URL`, `EJB_USER`, `EJB_PASSWORD`, `DB_URL`, `DB_USER`, `DB_PASSWORD`, `BACKEND_MODE` (`ejb` | `rest`), `GATEWAY_URL`, `API_KEY`.
+Variables de entorno: `LOGIC_URL`, `DATA_URL`, `EJB_USER`, `EJB_PASSWORD`, `EJB_INVOCATION_TIMEOUT_MS`, `TX_NODE_ID`, `DB_URL`, `DB_USER`, `DB_PASSWORD`, `BACKEND_MODE` (`ejb` | `rest`), `GATEWAY_URL`, `API_KEY`.
