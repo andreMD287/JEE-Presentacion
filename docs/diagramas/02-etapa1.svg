@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="480" viewBox="0 0 1500 480" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<defs>
+  <marker id="call" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 Z" fill="#1f1f1f"/></marker>
+  <marker id="dep" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10" fill="none" stroke="#1f1f1f" stroke-width="1.4"/></marker>
+  <marker id="real" viewBox="0 0 12 12" refX="11.5" refY="6" markerWidth="13" markerHeight="13" orient="auto-start-reverse">
+    <path d="M0,0 L12,6 L0,12 Z" fill="white" stroke="#1f1f1f" stroke-width="1.2"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="white"/>
+<circle cx="55" cy="121" r="11" fill="white" stroke="#1f1f1f" stroke-width="1.4"/>
+<line x1="55" y1="132" x2="55" y2="162" stroke="#1f1f1f" stroke-width="1.4"/>
+<line x1="38" y1="142" x2="72" y2="142" stroke="#1f1f1f" stroke-width="1.4"/>
+<line x1="55" y1="162" x2="41" y2="184" stroke="#1f1f1f" stroke-width="1.4"/>
+<line x1="55" y1="162" x2="69" y2="184" stroke="#1f1f1f" stroke-width="1.4"/>
+<text x="55" y="202" font-size="12" font-weight="normal" text-anchor="middle" fill="#1f1f1f">Operador</text>
+<polygon points="120,60 130,50 420,50 410,60" fill="#e2e2e2" stroke="#1f1f1f" stroke-width="1.2"/>
+<polygon points="410,60 420,50 420,420 410,430" fill="#cfcfcf" stroke="#1f1f1f" stroke-width="1.2"/>
+<rect x="120" y="60" width="290" height="370" fill="#f3f3f3" stroke="#1f1f1f" stroke-width="1.2"/>
+<text x="132" y="82" font-size="14" font-weight="bold" text-anchor="start" fill="#1f1f1f">presentation</text>
+<text x="132" y="99" font-size="11.5" font-weight="normal" text-anchor="start" fill="#555555">Tomcat 10.1 · JSF 4 + Weld 5</text>
+<rect x="140" y="110" width="250" height="52" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
+<rect x="368" y="117" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="364" y="120" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="364" y="126.5" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<text x="256.0" y="137" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">Páginas Facelets</text>
+<text x="256.0" y="152" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">lista · registro · detalle</text>
+<rect x="140" y="205" width="250" height="67" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
+<rect x="368" y="212" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="364" y="215" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="364" y="221.5" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<text x="256.0" y="229" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«CDI @Named»</text>
+<text x="256.0" y="247" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">RequestsBean</text>
+<text x="256.0" y="262" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">muestra mensajes de negocio y de falla</text>
+<rect x="140" y="315" width="250" height="67" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
+<rect x="368" y="322" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="364" y="325" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="364" y="331.5" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<text x="256.0" y="339" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«estrategia · BACKEND_MODE=ejb»</text>
+<text x="256.0" y="357" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">EjbRequestGateway</text>
+<text x="256.0" y="372" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">usa RemoteEjbLocator</text>
+<polyline points="265,162 265,205" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
+<polyline points="265,272 265,315" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
+<polyline points="80,142 140,142" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
+<rect x="90.1" y="117.8" width="35.8" height="20.5" fill="white" rx="3"/>
+<text x="108" y="133.25" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">HTTP</text>
+<polygon points="540,60 550,50 880,50 870,60" fill="#e2e2e2" stroke="#1f1f1f" stroke-width="1.2"/>
+<polygon points="870,60 880,50 880,420 870,430" fill="#cfcfcf" stroke="#1f1f1f" stroke-width="1.2"/>
+<rect x="540" y="60" width="330" height="370" fill="#f3f3f3" stroke="#1f1f1f" stroke-width="1.2"/>
+<text x="552" y="82" font-size="14" font-weight="bold" text-anchor="start" fill="#1f1f1f">logic</text>
+<text x="552" y="99" font-size="11.5" font-weight="normal" text-anchor="start" fill="#555555">WildFly 38 · EJB</text>
+<rect x="560" y="110" width="290" height="82" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
+<rect x="828" y="117" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="824" y="120" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="824" y="126.5" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<text x="696.0" y="134" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«@Stateless · NOT_SUPPORTED»</text>
+<text x="696.0" y="152" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">ResourceRequestServiceBean</text>
+<text x="696.0" y="167" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">implementa ResourceRequestService</text>
+<text x="696.0" y="182" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">reglas RN-1..RN-5 (código del T2)</text>
+<rect x="560" y="225" width="290" height="67" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
+<rect x="828" y="232" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="824" y="235" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="824" y="241.5" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<text x="696.0" y="249" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«puerto del T2»</text>
+<text x="696.0" y="267" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">ResourceRequestRepository</text>
+<text x="696.0" y="282" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">save · findById · findAll</text>
+<rect x="560" y="325" width="290" height="67" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
+<rect x="828" y="332" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="824" y="335" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="824" y="341.5" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<text x="696.0" y="349" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«adaptador»</text>
+<text x="696.0" y="367" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">RemoteResourceRequestRepository</text>
+<text x="696.0" y="382" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">traduce dominio ⇄ ResourceRequestData</text>
+<polyline points="705,192 705,225" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
+<rect x="720.3" y="197.8" width="29.3" height="20.5" fill="white" rx="3"/>
+<text x="735" y="213.25" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">usa</text>
+<polyline points="705,325 705,292" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#real)"/>
+<rect x="717.8" y="297.8" width="74.4" height="20.5" fill="white" rx="3"/>
+<text x="755" y="313.25" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">implementa</text>
+<polyline points="390,350 475,350 475,150 560,150" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
+<rect x="431.4" y="218.0" width="87.3" height="64.0" fill="white" rx="3"/>
+<text x="475" y="233.5" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">EJB remoto</text>
+<text x="475" y="248.0" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">remote+http</text>
+<text x="475" y="262.5" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">+ usuario de</text>
+<text x="475" y="277.0" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">aplicación</text>
+<polygon points="1000,60 1010,50 1310,50 1300,60" fill="#e2e2e2" stroke="#1f1f1f" stroke-width="1.2"/>
+<polygon points="1300,60 1310,50 1310,420 1300,430" fill="#cfcfcf" stroke="#1f1f1f" stroke-width="1.2"/>
+<rect x="1000" y="60" width="300" height="370" fill="#f3f3f3" stroke="#1f1f1f" stroke-width="1.2"/>
+<text x="1012" y="82" font-size="14" font-weight="bold" text-anchor="start" fill="#1f1f1f">data</text>
+<text x="1012" y="99" font-size="11.5" font-weight="normal" text-anchor="start" fill="#555555">WildFly 38 · JPA + JTA</text>
+<rect x="1020" y="110" width="260" height="82" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
+<rect x="1258" y="117" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="1254" y="120" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="1254" y="126.5" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<text x="1141.0" y="134" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«@Stateless · JTA»</text>
+<text x="1141.0" y="152" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">ResourceRequestDataServiceBean</text>
+<text x="1141.0" y="167" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">implementa ResourceRequestDataService</text>
+<text x="1141.0" y="182" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">una transacción por llamada</text>
+<rect x="1020" y="225" width="260" height="67" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
+<rect x="1258" y="232" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="1254" y="235" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="1254" y="241.5" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<text x="1141.0" y="249" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«@Entity»</text>
+<text x="1141.0" y="267" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">ResourceRequestEntity</text>
+<text x="1141.0" y="282" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">tabla resource_request</text>
+<rect x="1020" y="325" width="260" height="67" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
+<rect x="1258" y="332" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="1254" y="335" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<rect x="1254" y="341.5" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
+<text x="1141.0" y="349" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«datasource JTA»</text>
+<text x="1141.0" y="367" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">RecursosDS</text>
+<text x="1141.0" y="382" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">pool de conexiones JDBC</text>
+<polyline points="1150,192 1150,225" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
+<rect x="1157.2" y="197.8" width="61.5" height="20.5" fill="white" rx="3"/>
+<text x="1188" y="213.25" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">persiste</text>
+<polyline points="1150,292 1150,325" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
+<rect x="1157.3" y="297.8" width="29.3" height="20.5" fill="white" rx="3"/>
+<text x="1172" y="313.25" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">usa</text>
+<polyline points="850,360 935,360 935,150 1020,150" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
+<rect x="894.6" y="237.5" width="80.8" height="35.0" fill="white" rx="3"/>
+<text x="935" y="253.0" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">EJB remoto</text>
+<text x="935" y="267.5" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">remote+http</text>
+<path d="M1380,314 L1380,406 A50.0,9 0 0 0 1480,406 L1480,314" fill="#f3f3f3" stroke="#1f1f1f" stroke-width="1.2"/>
+<ellipse cx="1430.0" cy="314" rx="50.0" ry="9" fill="#e2e2e2" stroke="#1f1f1f" stroke-width="1.2"/>
+<text x="1430.0" y="361.0" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1f1f1f">PostgreSQL</text>
+<text x="1430.0" y="376.0" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">16</text>
+<polyline points="1280,360 1380,360" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
+<rect x="1312.1" y="334.8" width="35.8" height="20.5" fill="white" rx="3"/>
+<text x="1330" y="350.25" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">JDBC</text>
+<polyline points="120,462 158,462" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
+<text x="166" y="466" font-size="11.5" font-weight="normal" text-anchor="start" fill="#555555">llamada / uso</text>
+<polyline points="263.72,462 301.72,462" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#real)"/>
+<text x="309.72" y="466" font-size="11.5" font-weight="normal" text-anchor="start" fill="#555555">implementa (el adaptador implementa el puerto)</text>
+</svg>

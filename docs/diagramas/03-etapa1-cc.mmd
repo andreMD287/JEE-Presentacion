@@ -1,5 +1,0 @@
-flowchart LR
-    U["Navegador"] -->|"HTTP"| P["presentation<br/>Tomcat 10.1<br/>JSF + Weld"]
-    P -->|"EJB remoto<br/>remote+http"| L["logic<br/>WildFly 38<br/>EJB Stateless"]
-    L -->|"EJB remoto<br/>remote+http"| D["data<br/>WildFly 38<br/>EJB + JPA"]
-    D -->|"JDBC / JTA"| DB[("PostgreSQL 16")]

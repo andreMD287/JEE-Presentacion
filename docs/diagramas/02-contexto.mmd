@@ -1,8 +1,0 @@
-flowchart LR
-    OP["Operador del centro de atencion<br/>(navegador)"]
-    EXT_REST["Sistema externo REST<br/>(p. ej. app movil, tablero)"]
-    EXT_SOAP["Sistema externo SOAP<br/>(sistema heredado de un organismo)"]
-    SYS["Sistema de gestion de recursos<br/>en emergencias"]
-    OP -->|"HTTP / JSF"| SYS
-    EXT_REST -->|"REST + API key"| SYS
-    EXT_SOAP -->|"SOAP 1.1"| SYS

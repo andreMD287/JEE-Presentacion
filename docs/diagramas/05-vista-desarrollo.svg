@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1220" height="485" viewBox="0 0 1220 485" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<defs>
+  <marker id="call" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 Z" fill="#1f1f1f"/></marker>
+  <marker id="dep" viewBox="0 0 10 10" refX="9.5" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10" fill="none" stroke="#1f1f1f" stroke-width="1.4"/></marker>
+  <marker id="real" viewBox="0 0 12 12" refX="11.5" refY="6" markerWidth="13" markerHeight="13" orient="auto-start-reverse">
+    <path d="M0,0 L12,6 L0,12 Z" fill="white" stroke="#1f1f1f" stroke-width="1.2"/></marker>
+</defs>
+<rect width="100%" height="100%" fill="white"/>
+<rect x="90" y="40" width="200" height="58" fill="white" stroke="#1f1f1f" stroke-width="1.1"/>
+<text x="190" y="58" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«artifact»</text>
+<text x="190" y="75" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">recursos.war</text>
+<text x="190" y="91" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">Tomcat · presentation</text>
+<rect x="30" y="145" width="134.0" height="20" fill="#e2e2e2" stroke="#1f1f1f" stroke-width="1.1"/>
+<rect x="30" y="165" width="270" height="92" fill="#fafafa" stroke="#1f1f1f" stroke-width="1.1"/>
+<text x="40" y="160" font-size="12.5" font-weight="bold" text-anchor="start" fill="#1f1f1f">presentation-jsf</text>
+<text x="42" y="187" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· beans CDI y páginas Facelets</text>
+<text x="42" y="205" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· RequestGateway + 2 estrategias</text>
+<text x="42" y="223" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· Faces 4.0.28 · Weld 5.1.7</text>
+<text x="42" y="241" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· cliente EJB de WildFly 38.0.1</text>
+<polyline points="190,165 190,98" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#dep)"/>
+<rect x="136.7" y="117.8" width="106.6" height="20.5" fill="white" rx="3"/>
+<text x="190" y="133.25" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">se empaqueta en</text>
+<polyline points="190,257 190,310" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4"/>
+<rect x="387" y="40" width="200" height="58" fill="white" stroke="#1f1f1f" stroke-width="1.1"/>
+<text x="487" y="58" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«artifact»</text>
+<text x="487" y="75" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">services.war</text>
+<text x="487" y="91" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">WildFly · services</text>
+<rect x="327" y="145" width="78.0" height="20" fill="#e2e2e2" stroke="#1f1f1f" stroke-width="1.1"/>
+<rect x="327" y="165" width="270" height="92" fill="#fafafa" stroke="#1f1f1f" stroke-width="1.1"/>
+<text x="337" y="160" font-size="12.5" font-weight="bold" text-anchor="start" fill="#1f1f1f">services</text>
+<text x="339" y="187" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· recurso JAX-RS + ExceptionMappers</text>
+<text x="339" y="205" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· endpoint JAX-WS + BusinessFault</text>
+<polyline points="487,165 487,98" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#dep)"/>
+<rect x="433.7" y="117.8" width="106.6" height="20.5" fill="white" rx="3"/>
+<text x="487" y="133.25" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">se empaqueta en</text>
+<polyline points="487,257 487,310" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4"/>
+<rect x="684" y="40" width="200" height="58" fill="white" stroke="#1f1f1f" stroke-width="1.1"/>
+<text x="784" y="58" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«artifact»</text>
+<text x="784" y="75" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">logic.war</text>
+<text x="784" y="91" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">WildFly · logic</text>
+<rect x="624" y="145" width="57.0" height="20" fill="#e2e2e2" stroke="#1f1f1f" stroke-width="1.1"/>
+<rect x="624" y="165" width="270" height="92" fill="#fafafa" stroke="#1f1f1f" stroke-width="1.1"/>
+<text x="634" y="160" font-size="12.5" font-weight="bold" text-anchor="start" fill="#1f1f1f">logic</text>
+<text x="636" y="187" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· ResourceRequestServiceBean (T2)</text>
+<text x="636" y="205" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· puerto ResourceRequestRepository</text>
+<text x="636" y="223" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· adaptador remoto</text>
+<text x="636" y="241" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· dominio ResourceRequest</text>
+<polyline points="784,165 784,98" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#dep)"/>
+<rect x="730.7" y="117.8" width="106.6" height="20.5" fill="white" rx="3"/>
+<text x="784" y="133.25" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">se empaqueta en</text>
+<polyline points="784,257 784,310" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4"/>
+<rect x="981" y="40" width="200" height="58" fill="white" stroke="#1f1f1f" stroke-width="1.1"/>
+<text x="1081" y="58" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«artifact»</text>
+<text x="1081" y="75" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">data.war</text>
+<text x="1081" y="91" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">WildFly · data</text>
+<rect x="921" y="145" width="50.0" height="20" fill="#e2e2e2" stroke="#1f1f1f" stroke-width="1.1"/>
+<rect x="921" y="165" width="270" height="92" fill="#fafafa" stroke="#1f1f1f" stroke-width="1.1"/>
+<text x="931" y="160" font-size="12.5" font-weight="bold" text-anchor="start" fill="#1f1f1f">data</text>
+<text x="933" y="187" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· ResourceRequestDataServiceBean</text>
+<text x="933" y="205" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· ResourceRequestEntity</text>
+<text x="933" y="223" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· persistence.xml</text>
+<polyline points="1081,165 1081,98" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#dep)"/>
+<rect x="1027.7" y="117.8" width="106.6" height="20.5" fill="white" rx="3"/>
+<text x="1081" y="133.25" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">se empaqueta en</text>
+<polyline points="1081,257 1081,310" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4"/>
+<polyline points="190,310 1081,310" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4"/>
+<polyline points="610,310 610,355" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#dep)"/>
+<rect x="692.0" y="299.8" width="216.1" height="20.5" fill="white" rx="3"/>
+<text x="800" y="315.25" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">todos dependen solo de contracts</text>
+<rect x="400" y="355" width="288.0" height="20" fill="#e2e2e2" stroke="#1f1f1f" stroke-width="1.1"/>
+<rect x="400" y="375" width="420" height="62" fill="#fafafa" stroke="#1f1f1f" stroke-width="1.1"/>
+<text x="410" y="370" font-size="12.5" font-weight="bold" text-anchor="start" fill="#1f1f1f">contracts (jar, va dentro de cada WAR)</text>
+<text x="412" y="398" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· interfaces @Remote · DTO JavaBeans · excepciones con code</text>
+<text x="412" y="416" font-size="11.8" font-weight="normal" text-anchor="start" fill="#1f1f1f">· RemoteEjbLocator (conexión EJB y timeout) · JndiNames</text>
+<path d="M860,362 L1180,362 L1190,372 L1190,438.0 L860,438.0 Z" fill="#fbfbf3" stroke="#1f1f1f" stroke-width="1"/>
+<path d="M1180,362 L1180,372 L1190,372" fill="none" stroke="#1f1f1f" stroke-width="1"/>
+<text x="869" y="382.5" font-size="11.5" font-weight="normal" text-anchor="start" fill="#1f1f1f">logic no depende de data: solo conoce la</text>
+<text x="869" y="398.0" font-size="11.5" font-weight="normal" text-anchor="start" fill="#1f1f1f">interfaz ResourceRequestDataService y su</text>
+<text x="869" y="413.5" font-size="11.5" font-weight="normal" text-anchor="start" fill="#1f1f1f">nombre JNDI. Se puede cambiar Datos sin</text>
+<text x="869" y="429.0" font-size="11.5" font-weight="normal" text-anchor="start" fill="#1f1f1f">recompilar la Lógica.</text>
+<polyline points="30,466 68,466" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#dep)"/>
+<text x="76" y="470" font-size="11.5" font-weight="normal" text-anchor="start" fill="#555555">depende de / se empaqueta en</text>
+</svg>

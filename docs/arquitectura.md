@@ -29,27 +29,14 @@ drivers con escenarios medibles, decisiones con alternativas y trade-offs, riesg
 
 ### 1.1 Consigna
 
-No hay enunciado escrito: el profesor dibujó tres esquemas en el tablero.
+No hay enunciado escrito: el profesor dibujó tres esquemas en el tablero (la parte baja de ③ queda tapada por los
+monitores en la foto).
 
-```mermaid
-flowchart TB
-    subgraph E1["1 - Tres capas en tres servidores"]
-        direction LR
-        P1["Tomcat<br/>JSF Presentacion"] --- L1["WildFly / Payara<br/>Logica"] --- D1["WildFly / Payara<br/>Datos"] --- B1[("BD")]
-    end
-    subgraph E2["2 - Capa de servicios"]
-        direction LR
-        C2["Cliente"] --- S2["Servicios"] --- L2["Logica"] --> X2["..."]
-    end
-    subgraph E3["3 - Varios clientes y API Gateway"]
-        direction LR
-        A3["Actor REST"] -->|REST| G3(("API Gateway")) --> S3["Servicio"]
-        A4["Actor SOAP"] -->|SOAP| S3
-        C3["Cliente de 2"] --> S3
-        S3 --> L3["Logica"]
-    end
-    E1 ~~~ E2 ~~~ E3
-```
+![Figura 1. Consigna del profesor en el tablero](diagramas/00-tablero.jpg)
+
+*Figura 1. Consigna.* ① JSF en Tomcat, Lógica y Datos en WildFly/Payara y la base de datos, cada uno en su servidor.
+② Un cliente que llega a la Lógica a través de una capa de Servicios. ③ Un actor REST que pasa por un API Gateway, un
+actor SOAP que llega directo al Servicio y el cliente de ②, todos hacia el Servicio y de ahí a la Lógica.
 
 ### 1.2 Interpretación y supuestos
 
@@ -68,16 +55,9 @@ gateway o solo diseñarlo?, (4) ¿producto obligatorio (Payara, gateway, PrimeFa
 
 ### 1.3 Diagrama de contexto
 
-```mermaid
-flowchart LR
-    OP["Operador del centro de atencion<br/>(navegador)"]
-    EXT_REST["Sistema externo REST<br/>(p. ej. app movil, tablero)"]
-    EXT_SOAP["Sistema externo SOAP<br/>(sistema heredado de un organismo)"]
-    SYS["Sistema de gestion de recursos<br/>en emergencias"]
-    OP -->|"HTTP / JSF"| SYS
-    EXT_REST -->|"REST + API key"| SYS
-    EXT_SOAP -->|"SOAP 1.1"| SYS
-```
+![Figura 2. Diagrama de contexto](diagramas/01-contexto.svg)
+
+*Figura 2. Contexto: el sistema y sus tres tipos de actor, sin componentes internos.*
 
 | Actor | Necesidad |
 |---|---|
@@ -143,49 +123,26 @@ heterogéneos, y cada paso tiene un costo explícito.
 
 ### 3.1 Etapa ① — N capas en tres servidores
 
-```mermaid
-flowchart LR
-    U["Navegador"] -->|"HTTP"| P["presentation<br/>Tomcat 10.1<br/>JSF + Weld"]
-    P -->|"EJB remoto<br/>remote+http"| L["logic<br/>WildFly 38<br/>EJB Stateless"]
-    L -->|"EJB remoto<br/>remote+http"| D["data<br/>WildFly 38<br/>EJB + JPA"]
-    D -->|"JDBC / JTA"| DB[("PostgreSQL 16")]
-```
+![Figura 3. Etapa 1: componentes y conectores de las tres capas](diagramas/02-etapa1.svg)
 
-Estilo **N capas (llamada y retorno) distribuido**: cada capa llama solo a la inferior. La Lógica del T2 no cambia
-sus reglas: su puerto `ResourceRequestRepository` ahora lo implementa un **adaptador remoto** que llama a la capa de
-Datos (D-3).
+*Figura 3. Etapa ①.* Estilo **N capas (llamada y retorno) distribuido**: cada capa llama solo a la inferior, por EJB
+remoto y con un usuario de aplicación. La Lógica del T2 no cambia sus reglas: su puerto `ResourceRequestRepository`
+ahora lo implementa un **adaptador remoto** que llama a la capa de Datos (D-3).
 
-### 3.2 Etapa ② — Capa de servicios
+### 3.2 Etapas ② y ③ — Capa de servicios y API Gateway
 
-```mermaid
-flowchart LR
-    C["Cliente"] -->|"REST / SOAP"| S["services<br/>WildFly 38<br/>JAX-RS + JAX-WS"]
-    S -->|"EJB remoto"| L["logic"]
-    L -->|"EJB remoto"| D["data"]
-    D --> DB[("PostgreSQL")]
-```
+![Figura 4. Etapas 2 y 3: capa de servicios, gateway y clientes heterogéneos](diagramas/03-etapas2-3.svg)
 
-`services` es una **fachada sin reglas** (D-5): traduce protocolo ↔ contrato de Lógica y errores de negocio ↔
-errores del protocolo. La Lógica sigue sin saber de HTTP ni de XML.
+*Figura 4. Etapas ② y ③.* El número en cada elemento indica la etapa en la que aparece; `logic`, `data` y PostgreSQL no
+cambian respecto de la etapa ①.
 
-### 3.3 Etapa ③ — Varios clientes y API Gateway
+- **Etapa ②:** `services` es una **fachada sin reglas** (D-5). Traduce protocolo ↔ contrato de Lógica y errores de
+  negocio ↔ errores del protocolo. La Lógica sigue sin saber de HTTP ni de XML.
+- **Etapa ③:** el gateway aplica **API key**, **límite de demanda** y **correlation-id** sin código (D-6). SOAP entra
+  directo, como en el tablero (D-7). La misma aplicación JSF, cambiando una variable de entorno, deja de usar EJB y
+  consume los servicios por el gateway (D-8, QA-MOD-1).
 
-```mermaid
-flowchart LR
-    R["Cliente REST"] -->|"REST + apikey"| G(("gateway<br/>Kong 3.9"))
-    J["presentation<br/>BACKEND_MODE=rest"] -->|"REST + apikey"| G
-    G -->|"REST"| S["services"]
-    W["Cliente SOAP"] -->|"SOAP"| S
-    S -->|"EJB remoto"| L["logic"]
-    L -->|"EJB remoto"| D["data"]
-    D --> DB[("PostgreSQL")]
-```
-
-El gateway aplica **autenticación por API key**, **límite de demanda** y **correlation-id** sin código (D-6). SOAP entra
-directo, como en el tablero (D-7). La misma aplicación JSF, cambiando una variable de entorno, deja de usar EJB y pasa
-a consumir los servicios por el gateway (D-8, QA-MOD-1).
-
-### 3.4 Comparación
+### 3.3 Comparación
 
 | Criterio | ① N capas (EJB) | ② Servicios | ③ Servicios + gateway |
 |---|---|---|---|
@@ -201,61 +158,13 @@ a consumir los servicios por el gateway (D-8, QA-MOD-1).
 
 ## 4. Vista lógica
 
-### 4.1 Contratos compartidos y capas de negocio y datos
+Los cuatro módulos de capa quedan a los lados y `contracts` en el centro: las flechas solo van de una capa hacia
+`contracts`, nunca de una capa a otra. Así se ve en el diagrama el desacoplamiento de D-3 y D-4.
 
-```mermaid
-classDiagram
-    direction LR
-    class ResourceRequestService {
-        <<interface Remote>>
-        +register(CreateResourceRequestCommand) ResourceRequestView
-        +findAll() List
-        +findById(Long) ResourceRequestView
-        +attend(Long) ResourceRequestView
-        +findPending() List
-    }
-    class ResourceRequestDataService {
-        <<interface Remote>>
-        +save(ResourceRequestData) ResourceRequestData
-        +findById(Long) ResourceRequestData
-        +findAll() List
-    }
-    class ResourceRequestServiceBean {
-        <<Stateless, NOT_SUPPORTED>>
-        reglas RN-1..RN-5
-    }
-    class ResourceRequestRepository {
-        <<interface puerto>>
-        +save(ResourceRequest) ResourceRequest
-        +findById(Long) Optional
-        +findAll() List
-    }
-    class RemoteResourceRequestRepository {
-        <<adaptador remoto>>
-    }
-    class ResourceRequestDataServiceBean {
-        <<Stateless, JTA>>
-        -EntityManager em
-    }
-    class ResourceRequestEntity {
-        <<Entity>>
-    }
-    class RemoteEjbLocator {
-        +lookup(urlVariable, jndi, type)$
-    }
-    class BusinessException {
-        <<abstract>>
-        +getCode() String
-    }
-    ResourceRequestServiceBean ..|> ResourceRequestService
-    ResourceRequestServiceBean --> ResourceRequestRepository : usa
-    RemoteResourceRequestRepository ..|> ResourceRequestRepository
-    RemoteResourceRequestRepository --> ResourceRequestDataService : EJB remoto
-    RemoteResourceRequestRepository --> RemoteEjbLocator
-    ResourceRequestDataServiceBean ..|> ResourceRequestDataService
-    ResourceRequestDataServiceBean --> ResourceRequestEntity : persiste
-    ResourceRequestServiceBean ..> BusinessException : lanza
-```
+![Figura 5. Vista lógica: clases principales por módulo](diagramas/04-vista-logica.svg)
+
+*Figura 5. Vista lógica.* A la izquierda, los clientes de la Lógica (presentación y servicios). En el centro, los
+contratos compartidos. A la derecha, la Lógica del T2 con su puerto y adaptador, y la capa de Datos.
 
 | Elemento | Módulo | Responsabilidad |
 |---|---|---|
@@ -270,62 +179,9 @@ classDiagram
 | `ResourceRequestDataServiceBean` | `data` | Persistencia con JPA; cada llamada es una transacción JTA local |
 | `ResourceRequestEntity` | `data` | Mapeo de la tabla `resource_request` |
 
-### 4.2 Estados de una solicitud
-
-```mermaid
-stateDiagram-v2
-    [*] --> PENDIENTE : register (RN-1, RN-2, RN-3)
-    PENDIENTE --> ATENDIDA : attend (RN-4)
-    ATENDIDA --> ATENDIDA : attend rechazado - ALREADY_ATTENDED (RN-5)
-    ATENDIDA --> [*]
-```
-
-Solo la Lógica cambia el estado. Datos guarda el valor que recibe, sin validar transiciones.
-
-### 4.3 Capa de servicios y presentación
-
-```mermaid
-classDiagram
-    direction LR
-    class ResourceRequestResource {
-        <<JAX-RS /api/v1/requests>>
-    }
-    class ExceptionMappers {
-        <<JAX-RS Provider>>
-        BusinessException a 400/404/409
-    }
-    class ResourceRequestSoapService {
-        <<JAX-WS>>
-        registerRequest, listRequests, getRequest
-        attendRequest, listPendingRequests
-    }
-    class BusinessFault {
-        <<WebFault>>
-        code, message
-    }
-    class RequestGateway {
-        <<interface Strategy>>
-        +register(command)
-        +findAll()
-        +findById(id)
-        +attend(id)
-        +findPending()
-    }
-    class EjbRequestGateway
-    class RestRequestGateway
-    class RequestsBean {
-        <<CDI Named>>
-    }
-    ResourceRequestResource --> ResourceRequestService : EJB remoto
-    ResourceRequestSoapService --> ResourceRequestService : EJB remoto
-    ResourceRequestResource ..> ExceptionMappers
-    ResourceRequestSoapService ..> BusinessFault
-    RequestsBean --> RequestGateway
-    EjbRequestGateway ..|> RequestGateway
-    RestRequestGateway ..|> RequestGateway
-    EjbRequestGateway --> ResourceRequestService : modo ejb
-    RestRequestGateway --> ResourceRequestResource : modo rest, via Kong
-```
+**Estados.** Una solicitud nace `PENDIENTE` (RN-3) y pasa a `ATENDIDA` con `attend` (RN-4). Un segundo `attend` se
+rechaza con `ALREADY_ATTENDED` (RN-5). Solo la Lógica cambia el estado; Datos guarda el valor que recibe, sin validar
+transiciones.
 
 - **Fachada sin reglas.** `ResourceRequestResource` y `ResourceRequestSoapService` solo traducen: no validan cantidades
   ni estados. Los errores de negocio se traducen por `code`: REST a 400/404/409 con el cuerpo del T2
@@ -337,18 +193,10 @@ classDiagram
 
 ## 5. Vista de desarrollo
 
-```mermaid
-flowchart BT
-    CONTRACTS["contracts (jar)<br/>interfaces Remote, DTO,<br/>excepciones, RemoteEjbLocator"]
-    DATA["data (war)<br/>EJB + JPA"]
-    LOGIC["logic (war)<br/>EJB del T2 + puerto + adaptador"]
-    SERVICES["services (war)<br/>JAX-RS + JAX-WS"]
-    PRES["presentation-jsf (war)<br/>Facelets + CDI + Strategy"]
-    DATA --> CONTRACTS
-    LOGIC --> CONTRACTS
-    SERVICES --> CONTRACTS
-    PRES --> CONTRACTS
-```
+![Figura 6. Vista de desarrollo: módulos Maven, artefactos y dependencias](diagramas/05-vista-desarrollo.svg)
+
+*Figura 6. Vista de desarrollo. Cada módulo produce un artefacto que se despliega en su propio servidor; todos dependen
+solo de `contracts`.*
 
 | Módulo | Artefacto | Servidor | Depende de |
 |---|---|---|---|
@@ -385,116 +233,43 @@ JEE-Presentacion/
 
 ## 6. Vista de procesos
 
-### 6.1 Registrar desde JSF en la etapa ①
+Tres secuencias cubren los tres tipos de cliente. Cada una incluye sus ramas de error, para que se vea dónde nace cada
+error y cómo llega al cliente.
 
-```mermaid
-sequenceDiagram
-    actor U as Operador
-    participant P as presentation (Tomcat)
-    participant L as logic (WildFly)
-    participant D as data (WildFly)
-    participant DB as PostgreSQL
-    U->>P: POST formulario (JSF)
-    P->>L: register(command) [EJB remoto]
-    L->>L: validar RN-1 y RN-2, estado PENDIENTE (RN-3)
-    L->>D: save(data sin id) [EJB remoto, sin transaccion]
-    D->>DB: INSERT (transaccion JTA local)
-    DB-->>D: id generado
-    D-->>L: ResourceRequestData con id
-    L-->>P: ResourceRequestView
-    P-->>U: mensaje "Solicitud registrada" y tabla actualizada
-```
+### 6.1 Registrar desde JSF (etapa ①)
 
-### 6.2 Atender vía REST y gateway en la etapa ③
+![Figura 7. Registrar desde JSF: éxito, regla de negocio y caída de la capa de Datos](diagramas/06-secuencia-registrar-jsf.svg)
 
-```mermaid
-sequenceDiagram
-    actor C as Cliente REST
-    participant G as gateway (Kong)
-    participant S as services
-    participant L as logic
-    participant D as data
-    C->>G: PUT /api/v1/requests/7/attend + apikey
-    G->>G: key-auth, rate-limiting, correlation-id
-    G->>S: PUT /services/api/v1/requests/7/attend + X-Correlation-ID
-    S->>L: attend(7) [EJB remoto]
-    L->>D: findById(7)
-    D-->>L: solicitud PENDIENTE
-    L->>L: RN-5: no esta ATENDIDA
-    L->>D: save(estado ATENDIDA)
-    D-->>L: guardada
-    L-->>S: ResourceRequestView ATENDIDA
-    S-->>G: 200 JSON
-    G-->>C: 200 JSON + X-Correlation-ID
-```
+*Figura 7. Registrar desde JSF.* La regla RN-1 se evalúa en la Lógica y su mensaje llega intacto a la pantalla. Si
+`data` no responde, el timeout de invocación (D-14) corta la espera a los 5 s y la UI muestra un mensaje controlado
+(QA-DIS-1).
 
-`findById` y `save` son dos transacciones locales de Datos (D-11). La ventana entre ambas es un riesgo conocido (R-5).
+### 6.2 Atender por REST a través del gateway (etapa ③)
 
-### 6.3 Consultar vía SOAP en la etapa ③
+![Figura 8. Atender por REST vía gateway: controles de Kong y reglas RN-4/RN-5](diagramas/07-secuencia-atender-rest.svg)
 
-```mermaid
-sequenceDiagram
-    actor W as Cliente SOAP
-    participant S as services (JAX-WS)
-    participant L as logic
-    participant D as data
-    W->>S: POST ResourceRequestSoapService getRequest(id=7)
-    S->>L: findById(7) [EJB remoto]
-    L->>D: findById(7)
-    D-->>L: ResourceRequestData
-    L-->>S: ResourceRequestView
-    S-->>W: getRequestResponse (XML)
-```
+*Figura 8. Atender por REST.* Kong rechaza sin llegar a `services` las peticiones sin clave (401) o por encima del
+límite (429). Las reglas RN-4 y RN-5 se aplican en la Lógica y `services` solo las traduce a 404/409. `findById` y
+`save` son dos transacciones locales de Datos (D-11); la ventana entre ambas es un riesgo conocido (R-5).
 
-### 6.4 Error de regla de negocio propagado a los tres clientes
+### 6.3 Registrar por SOAP (etapa ③)
 
-```mermaid
-sequenceDiagram
-    participant J as presentation (JSF)
-    participant R as services REST
-    participant W as services SOAP
-    participant L as logic
-    J->>L: register(cantidad 0)
-    L-->>J: BusinessValidationException VALIDATION_ERROR
-    J->>J: FacesMessage con code y mensaje, sin stack trace
-    R->>L: register(cantidad 0)
-    L-->>R: BusinessValidationException
-    R->>R: ExceptionMapper: 400 con code VALIDATION_ERROR
-    W->>L: register(cantidad 0)
-    L-->>W: BusinessValidationException
-    W->>W: SOAP Fault con code VALIDATION_ERROR en detail
-```
+![Figura 9. Registrar por SOAP: respuesta normal y SOAP Fault](diagramas/08-secuencia-registrar-soap.svg)
 
-La excepción viaja **intacta** por EJB remoto (clase, `code` y mensaje) gracias a `@ApplicationException` y a que es
-`Serializable`. Así lo comprobó el spike S-2. Cada cliente la presenta en su protocolo; la regla y el mensaje son uno solo.
+*Figura 9. Registrar por SOAP.* El mismo error de la figura 7 llega al cliente SOAP como un Fault con el mismo `code`.
+
+En los tres casos la excepción de negocio viaja **intacta** por EJB remoto (clase, `code` y mensaje) gracias a
+`@ApplicationException` y a que es `Serializable`, como lo comprobó el spike S-2. Cada cliente la presenta en su
+protocolo; la regla y el mensaje son uno solo.
 
 ---
 
 ## 7. Vista física / despliegue
 
-```mermaid
-flowchart TB
-    NAV["Navegador"]
-    RC["Cliente REST<br/>Postman / Newman"]
-    SC["Cliente SOAP<br/>Newman / SoapUI"]
-    subgraph HOST["Maquina anfitriona - Docker Compose, red jee-presentacion_default"]
-        PRES["presentation<br/>tomcat:10.1-jdk17<br/>recursos.war"]
-        GW["gateway<br/>kong:3.9.4 DB-less"]
-        SRV["services<br/>wildfly:38.0.1-jdk17<br/>services.war"]
-        LOG["logic<br/>wildfly:38.0.1-jdk17<br/>logic.war"]
-        DAT["data<br/>wildfly:38.0.1-jdk17<br/>data.war"]
-        PG[("postgres<br/>postgres:16-alpine<br/>volumen postgres_data")]
-    end
-    NAV -->|"HTTP :8080"| PRES
-    RC -->|"HTTP :8000"| GW
-    SC -->|"HTTP :8082 SOAP"| SRV
-    PRES -->|"remote+http :8080 modo ejb"| LOG
-    PRES -.->|"HTTP :8000 modo rest"| GW
-    GW -->|"HTTP :8080"| SRV
-    SRV -->|"remote+http :8080"| LOG
-    LOG -->|"remote+http :8080"| DAT
-    DAT -->|"JDBC :5432"| PG
-```
+![Figura 10. Vista física: contenedores, artefactos, puertos publicados y orden de arranque](diagramas/09-despliegue.svg)
+
+*Figura 10. Vista física. Cada contenedor es un nodo con su imagen y su artefacto; los cuadros en el borde del anfitrión
+son los puertos publicados; el número indica el orden de arranque.*
 
 | Contenedor | Imagen | Puerto en el host | Protocolos de entrada | Expuesto |
 |---|---|---|---|---|
@@ -518,32 +293,17 @@ flowchart TB
 
 ## 8. Escenarios (+1)
 
-```mermaid
-flowchart LR
-    OP["Operador"]
-    REST["Sistema REST"]
-    SOAP["Sistema SOAP"]
-    subgraph SYS["Gestion de recursos"]
-        UC1(["RF-1 Registrar"])
-        UC2(["RF-2 Consultar todas"])
-        UC3(["RF-3 Consultar por id"])
-        UC4(["RF-4 Atender"])
-        UC5(["RF-5 Pendientes"])
-    end
-    OP --- UC1 & UC2 & UC3 & UC4 & UC5
-    REST --- UC1 & UC2 & UC3 & UC4 & UC5
-    SOAP --- UC1 & UC2 & UC3 & UC4 & UC5
-```
+Los cinco casos de uso son los mismos para los tres actores del contexto (figura 2). La tabla muestra cómo recorre
+cada uno las vistas anteriores.
 
 | Escenario | Lógica (§4) | Desarrollo (§5) | Procesos (§6) | Física (§7) | Evidencia |
 |---|---|---|---|---|---|
-| RF-1 registrar válida | `register` + RN-1..RN-3 en `ResourceRequestServiceBean` | `logic`, `data` | 6.1 | presentation → logic → data → postgres | Newman REST/SOAP; captura JSF |
-| RF-1 cantidad 0 | `BusinessValidationException` | `contracts.exception` | 6.4 | Igual en los tres clientes | Newman (400 / Fault); captura JSF |
-| RF-2 consultar todas | `findAll` | `data` (orden por id) | 6.1 (análogo) | Tres caminos medidos en QA-REN-1 | `scripts/medir-latencia.sh` |
-| RF-3 por id / inexistente | `findById`; `null` → `RequestNotFoundException` | adaptador remoto | 6.3 | services → logic → data | Newman |
-| RF-4 atender / dos veces | `attend` + RN-4, RN-5 | `logic` | 6.2 | gateway → services → logic → data | Newman (200 / 409) |
-| RF-5 pendientes | `findPending` (filtro en Lógica, no en Datos) | `logic` | 6.1 (análogo) | Todos los clientes | Newman |
-
+| RF-1 registrar válida | `register` + RN-1..RN-3 en `ResourceRequestServiceBean` | `logic`, `data` | Fig. 7 y 9 | presentation → logic → data → postgres | Newman REST/SOAP; captura JSF |
+| RF-1 cantidad 0 | `BusinessValidationException` | `contracts` | Fig. 7 y 9 (rama de error) | Igual en los tres clientes | Newman (400 / Fault); captura JSF |
+| RF-2 consultar todas | `findAll` | `data` (orden por id) | Análogo a la fig. 7 | Tres caminos medidos en QA-REN-1 | `scripts/medir-latencia.sh` |
+| RF-3 por id / inexistente | `findById`; `null` → `RequestNotFoundException` | adaptador remoto | Fig. 8 (rama 404) | services → logic → data | Newman |
+| RF-4 atender / dos veces | `attend` + RN-4, RN-5 | `logic` | Fig. 8 | gateway → services → logic → data | Newman (200 / 409) |
+| RF-5 pendientes | `findPending` (filtro en Lógica, no en Datos) | `logic` | Análogo a la fig. 7 | Todos los clientes | Newman |
 ---
 
 ## 9. Decisiones arquitectónicas y tácticas
@@ -611,12 +371,12 @@ Cada decisión sigue la cadena **driver → alternativas → trade-off → decis
 | Driver | Escenario | Decisiones | Elementos | Vista | Evidencia |
 |---|---|---|---|---|---|
 | CON-1, QA-MOD-1 | QA-MOD-1 | D-3, D-4, D-8 | `RequestGateway`, puerto/adaptador, `contracts` | Lógica, desarrollo | `scripts/qa-mod-1.sh` + `git diff` |
-| CON-2 | QA-INT-1 | D-5, D-13 | `services` (JAX-RS, JAX-WS) | Lógica, procesos 6.2–6.4 | Newman REST y SOAP |
+| CON-2 | QA-INT-1 | D-5, D-13 | `services` (JAX-RS, JAX-WS) | Lógica, procesos 6.2 y 6.3 (fig. 8 y 9) | Newman REST y SOAP |
 | CON-2 | QA-SEG-1 | D-6, D-10, D-15 | `gateway` (`key-auth`) | Física | `scripts/qa-seg-1.sh` |
 | Operación continua | QA-DIS-1 | D-14, D-11 | `RemoteEjbLocator`, healthchecks | Procesos, física | `scripts/qa-dis-1.sh`; `docs/evidencias/spikes.md` |
 | Picos de demanda | QA-DIS-2 | D-6 | `gateway` (`rate-limiting`) | Física | `scripts/qa-dis-2.sh` |
 | Costo de distribuir | QA-REN-1 | D-1, D-5, D-6 | Los tres caminos | §3.4 | `scripts/medir-latencia.sh` |
-| RN-1..RN-5 | Error de negocio igual en los tres clientes | D-2, D-4, D-5 | `BusinessException` + traductores | Procesos 6.4 | Newman + captura JSF |
+| RN-1..RN-5 | Error de negocio igual en los tres clientes | D-2, D-4, D-5 | `BusinessException` + traductores | Procesos 6.1–6.3 (ramas de error) | Newman + captura JSF |
 
 ---
 

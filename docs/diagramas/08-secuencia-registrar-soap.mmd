@@ -1,0 +1,18 @@
+sequenceDiagram
+    autonumber
+    actor W as Cliente SOAP
+    participant S as services<br/>JAX-WS
+    participant L as logic
+    participant D as data
+
+    W->>S: registerRequest (sobre SOAP 1.1, directo, sin gateway)
+    S->>L: register(command) por EJB remoto
+    alt datos validos
+        L->>D: save(solicitud sin id)
+        D-->>L: ResourceRequestData con id
+        L-->>S: ResourceRequestView
+        S-->>W: registerRequestResponse con la solicitud PENDIENTE
+    else cantidad 0 (RN-1)
+        L-->>S: BusinessValidationException (VALIDATION_ERROR)
+        S-->>W: SOAP Fault con el mensaje y code VALIDATION_ERROR en detail
+    end

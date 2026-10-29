@@ -1,0 +1,32 @@
+sequenceDiagram
+    autonumber
+    actor C as Cliente REST
+    participant G as gateway<br/>Kong
+    participant S as services<br/>JAX-RS
+    participant L as logic
+    participant D as data
+
+    C->>G: PUT /api/v1/requests/7/attend + apikey
+    alt sin API key o clave invalida
+        G-->>C: 401 (la peticion no llega a services)
+    else mas de 20 peticiones por segundo
+        G-->>C: 429
+    else autorizada
+        G->>S: PUT /services/api/v1/requests/7/attend + X-Correlation-ID
+        S->>L: attend(7) por EJB remoto
+        L->>D: findById(7)
+        D-->>L: solicitud o null
+        alt no existe (RN-4)
+            L-->>S: RequestNotFoundException
+            S-->>G: 404 REQUEST_NOT_FOUND
+        else ya esta ATENDIDA (RN-5)
+            L-->>S: AlreadyAttendedException
+            S-->>G: 409 ALREADY_ATTENDED
+        else PENDIENTE
+            L->>D: save(estado ATENDIDA)
+            D-->>L: guardada
+            L-->>S: ResourceRequestView
+            S-->>G: 200 JSON
+        end
+        G-->>C: respuesta + X-Correlation-ID
+    end

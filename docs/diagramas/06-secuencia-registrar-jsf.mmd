@@ -1,0 +1,27 @@
+sequenceDiagram
+    autonumber
+    actor U as Operador
+    participant P as presentation<br/>Tomcat - JSF
+    participant L as logic<br/>WildFly - EJB
+    participant D as data<br/>WildFly - JPA
+    participant DB as PostgreSQL
+
+    U->>P: envia el formulario de registro
+    P->>L: register(command) por EJB remoto
+    alt datos validos
+        L->>L: aplica RN-1, RN-2 y RN-3
+        L->>D: save(solicitud sin id) por EJB remoto
+        D->>DB: INSERT en una transaccion JTA local
+        DB-->>D: id generado
+        D-->>L: ResourceRequestData con id
+        L-->>P: ResourceRequestView
+        P-->>U: "Solicitud registrada" y tabla actualizada
+    else cantidad 0 u otro dato invalido
+        L-->>P: BusinessValidationException (VALIDATION_ERROR)
+        P-->>U: mensaje de negocio de la Logica, sin stack trace
+    else data no responde
+        L-xD: save(...)
+        Note over L,D: timeout de 5 s
+        L-->>P: EJBException por timeout
+        P-->>U: "Servicio no disponible, intente de nuevo"
+    end
