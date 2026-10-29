@@ -29,7 +29,8 @@ Motivos: la EL de Tomcat 10.1 (EL 5.0) no lee componentes de `record` en JSF (`#
 | `ResourceRequestDataServiceBean` | `data.war` | `ejb:/data/ResourceRequestDataServiceBean!co.edu.javeriana.recursos.contracts.ResourceRequestDataService` |
 
 - Protocolo `remote+http` sobre el puerto 8080 interno del contenedor; autenticación con usuario de aplicación de WildFly (`EJB_USER` / `EJB_PASSWORD`).
-- Transacciones: JTA **local a Datos**; cada llamada remota a Datos es su propia transacción (D-11). La forma exacta de evitar la propagación (p. ej. `NOT_SUPPORTED` en Lógica) se fija con el spike S-2.
+- Conexión: contexto JNDI programático (`WildFlyInitialContextFactory` + `PROVIDER_URL` + credenciales). Probado en los spikes S-1 y S-2; código de ejemplo en `docs/evidencias/spikes.md`.
+- Transacciones: JTA **local a Datos**; cada llamada remota a Datos es su propia transacción (D-11). El bean de Lógica lleva `@TransactionAttribute(NOT_SUPPORTED)` a nivel de clase: el spike S-2 mostró que con `REQUIRED` la transacción se propaga a Datos.
 
 ## 3. REST (`services`, etapa ②③)
 
