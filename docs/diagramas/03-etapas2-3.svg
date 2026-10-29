@@ -121,7 +121,7 @@
 <rect x="1384" y="126.5" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
 <text x="1261.0" y="134" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«@Stateless»</text>
 <text x="1261.0" y="152" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">ResourceRequestServiceBean</text>
-<text x="1261.0" y="167" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">reglas RN-1..RN-5</text>
+<text x="1261.0" y="167" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">reglas RN-1..RN-6</text>
 <rect x="1130" y="195" width="280" height="52" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
 <rect x="1388" y="202" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
 <rect x="1384" y="205" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>

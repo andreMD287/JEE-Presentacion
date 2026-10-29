@@ -13,9 +13,10 @@ Paquete base `co.edu.javeriana.recursos.contracts`.
 | Interfaz `@Remote` de Datos | `ResourceRequestDataService` | `save`, `findById` (**devuelve `null` si no existe**: `Optional` no es serializable), `findAll` (orden por id) |
 | DTO entrada | `dto.CreateResourceRequestCommand` | `disasterDescription`, `resourceType`, `Integer quantity`, `String priority` |
 | DTO salida de Lógica | `dto.ResourceRequestView` | `id`, `disasterDescription`, `resourceType`, `quantity`, `priority`, `status` |
-| DTO de Datos | `dto.ResourceRequestData` | Mismos campos que la vista; contrato Lógica→Datos |
+| DTO de Datos | `dto.ResourceRequestData` | Mismos campos que la vista **más `Long version`** (bloqueo optimista, D-16); contrato Lógica→Datos |
 | Enums | `dto.Priority {BAJA, MEDIA, ALTA}`, `dto.RequestStatus {PENDIENTE, ATENDIDA}` | Se movieron desde `domain.model` del T2 |
 | Excepciones | `exception.BusinessValidationException`, `RequestNotFoundException`, `AlreadyAttendedException` | Heredan de `BusinessException` con `getCode()`; `@ApplicationException(rollback = true)` |
+| Excepción interna Datos→Lógica | `exception.ConcurrentUpdateException` (`CONCURRENT_UPDATE`) | La lanza `save` si la fila cambió desde que se leyó. **No sale de la Lógica:** en `attend` se traduce a `AlreadyAttendedException` (otra petición atendió primero) |
 | Constantes | `JndiNames.LOGIC_SERVICE`, `JndiNames.DATA_SERVICE` | Ver §2 |
 
 **Cambio respecto al T2:** los DTO son clases JavaBean (constructor vacío + getters/setters), no `record`.
@@ -36,6 +37,14 @@ Motivos: la EL de Tomcat 10.1 (EL 5.0) no lee componentes de `record` en JSF (`#
   ```
   El proxy se puede guardar y reutilizar (es seguro entre hilos y se reconecta cuando la capa vuelve).
 - Timeout: `EJB_INVOCATION_TIMEOUT_MS` (5000 por defecto). Si la capa remota cae, la llamada lanza `jakarta.ejb.EJBException` (causa `TimeoutException`) o `org.jboss.ejb.client.RequestSendFailedException` en ≤ 5 s; el cliente debe mostrar un mensaje controlado (QA-DIS-1). Sin timeout la primera falla tardaba ~135 s.
+- Bloqueo optimista (D-16): `save` de una solicitud existente exige la `version` leída (si viene `null` lanza
+  `IllegalArgumentException`). Lo más simple en Lógica es conservar la versión que trae `findById` y reenviarla al
+  guardar; si el modelo de dominio se reconstruye en el adaptador, el dominio debe llevar `version` como dato opaco
+  para que el adaptador la copie en ambos sentidos. En `attend`, capturar `ConcurrentUpdateException` y lanzar
+  `AlreadyAttendedException(id)`.
+- Validación de prioridad (RN-6): `CreateResourceRequestCommand.priority` es `String`; la Lógica la exige y la
+  convierte a `Priority`; si falta o no es `BAJA`/`MEDIA`/`ALTA`, lanza `BusinessValidationException`
+  (`VALIDATION_ERROR`, HTTP 400).
 - Transacciones: JTA **local a Datos**; cada llamada remota a Datos es su propia transacción (D-11). El bean de Lógica lleva `@TransactionAttribute(NOT_SUPPORTED)` a nivel de clase: el spike S-2 mostró que con `REQUIRED` la transacción se propaga a Datos.
 
 ## 3. REST (`services`, etapa ②③)

@@ -42,7 +42,7 @@ actor SOAP que llega directo al Servicio y el cliente de ②, todos hacia el Ser
 
 | ID | Supuesto | Por qué es razonable | Si el profesor indica otra cosa |
 |---|---|---|---|
-| S-1 | ①, ② y ③ son **etapas acumulativas de un mismo sistema** y se implementan las tres | Los esquemas reutilizan piezas: Lógica aparece en los tres, Servicio en ② y ③, y la caja cliente de ② reaparece en ③ | Si era "elegir una", las tres siguen siendo válidas como evolución |
+| S-1 | ①, ② y ③ son **etapas acumulativas de un mismo sistema** y se implementan las tres | **Confirmado por el profesor.** Además, los esquemas reutilizan piezas: Lógica aparece en los tres, Servicio en ② y ③, y la caja cliente de ② reaparece en ③ | — |
 | S-2 | **Dominio:** solicitudes de recursos en emergencias del T2 | Es el tier de negocio que el curso ya pidió; el T4 le agrega presentación y lo distribuye | Cambian el modelo y las pantallas; la arquitectura se mantiene |
 | S-3 | **Requisitos funcionales = los del T2**, ahora con persistencia real (JPA + PostgreSQL) | El foco del T4 es la arquitectura, no reglas nuevas | Se agregan los que pida |
 | S-4 | Entregables: código, diseño arquitectónico y evidencias de funcionamiento | Es lo que se pidió en los talleres anteriores | — |
@@ -50,8 +50,8 @@ actor SOAP que llega directo al Servicio y el cliente de ②, todos hacia el Ser
 | S-6 | Servidor de aplicaciones **WildFly 38** (el tablero permite WildFly o Payara) | Experiencia del T3 y cliente EJB remoto documentado para Tomcat | — |
 | S-7 | El API Gateway aplica **solo a REST**; SOAP entra directo al servicio | Así está dibujado en ③ | Se agrega una ruta SOAP en el gateway |
 
-Preguntas abiertas para el profesor: (1) ¿etapas o elegir una?, (2) ¿dominio libre o el del T2?, (3) ¿implementar el
-gateway o solo diseñarlo?, (4) ¿producto obligatorio (Payara, gateway, PrimeFaces)?, (5) ¿Kubernetes o basta Docker?
+El profesor confirmó S-1 (se implementan las tres etapas). S-2 a S-7 no se alcanzaron a consultar; se tomaron con el
+criterio arquitectónico de cada fila y quedan documentadas como decisiones (§9), con su alternativa si se pidiera otra cosa.
 
 ### 1.3 Diagrama de contexto
 
@@ -87,7 +87,8 @@ gateway o solo diseñarlo?, (4) ¿producto obligatorio (Payara, gateway, PrimeFa
 | RN-2 | La descripción del desastre y el tipo de recurso son obligatorios | `VALIDATION_ERROR` |
 | RN-3 | Toda solicitud nueva inicia en `PENDIENTE` | — |
 | RN-4 | No se atiende una solicitud inexistente | `REQUEST_NOT_FOUND` |
-| RN-5 | No se atiende dos veces una solicitud `ATENDIDA` | `ALREADY_ATTENDED` |
+| RN-5 | No se atiende dos veces una solicitud `ATENDIDA`, tampoco con peticiones simultáneas (D-16) | `ALREADY_ATTENDED` |
+| RN-6 | La prioridad es obligatoria y debe ser `BAJA`, `MEDIA` o `ALTA` (regla del T2) | `VALIDATION_ERROR` |
 
 La presentación puede validar formato (campos vacíos) por usabilidad, pero la regla y su mensaje vienen de la Lógica:
 el mismo registro con cantidad 0 produce el mismo `code` y mensaje en JSF, REST y SOAP.
@@ -173,7 +174,7 @@ contratos compartidos. A la derecha, la Lógica del T2 con su puerto y adaptador
 | DTO `CreateResourceRequestCommand`, `ResourceRequestView`, `ResourceRequestData`, enums | `contracts` | Datos que cruzan fronteras remotas; JavaBeans serializables (D-13) |
 | `BusinessException` y sus tres hijas | `contracts` | Errores de negocio con `code` estable; `@ApplicationException` para llegar intactas al cliente remoto |
 | `RemoteEjbLocator`, `JndiNames` | `contracts` | Política única de conexión EJB remota: URL, credenciales y timeout de invocación (D-14) |
-| `ResourceRequestServiceBean` | `logic` | Reglas RN-1..RN-5 (código del T2); `NOT_SUPPORTED` para no propagar transacciones (D-11) |
+| `ResourceRequestServiceBean` | `logic` | Reglas RN-1..RN-6 (código del T2); `NOT_SUPPORTED` para no propagar transacciones (D-11) |
 | `ResourceRequestRepository` | `logic` | Puerto del T2, definido por el negocio |
 | `RemoteResourceRequestRepository` | `logic` | Adaptador del puerto: traduce dominio ↔ `ResourceRequestData` y llama a Datos |
 | `ResourceRequestDataServiceBean` | `data` | Persistencia con JPA; cada llamada es una transacción JTA local |
@@ -240,17 +241,18 @@ error y cómo llega al cliente.
 
 ![Figura 7. Registrar desde JSF: éxito, regla de negocio y caída de la capa de Datos](diagramas/06-secuencia-registrar-jsf.svg)
 
-*Figura 7. Registrar desde JSF.* La regla RN-1 se evalúa en la Lógica y su mensaje llega intacto a la pantalla. Si
-`data` no responde, el timeout de invocación (D-14) corta la espera a los 5 s y la UI muestra un mensaje controlado
-(QA-DIS-1).
+*Figura 7. Registrar desde JSF.* Las reglas RN-1, RN-2, RN-3 y RN-6 se evalúan en la Lógica y su mensaje llega intacto
+a la pantalla. Si `data` no responde, el timeout de invocación (D-14) corta la espera a los 5 s y la UI muestra un
+mensaje controlado (QA-DIS-1).
 
 ### 6.2 Atender por REST a través del gateway (etapa ③)
 
-![Figura 8. Atender por REST vía gateway: controles de Kong y reglas RN-4/RN-5](diagramas/07-secuencia-atender-rest.svg)
+![Figura 8. Atender por REST vía gateway: controles de Kong, reglas RN-4/RN-5 y concurrencia (D-16)](diagramas/07-secuencia-atender-rest.svg)
 
 *Figura 8. Atender por REST.* Kong rechaza sin llegar a `services` las peticiones sin clave (401) o por encima del
 límite (429). Las reglas RN-4 y RN-5 se aplican en la Lógica y `services` solo las traduce a 404/409. `findById` y
-`save` son dos transacciones locales de Datos (D-11); la ventana entre ambas es un riesgo conocido (R-5).
+`save` son dos transacciones locales de Datos (D-11). Si dos peticiones atienden la misma solicitud al tiempo, el
+bloqueo optimista de Datos (D-16) deja pasar solo una; la otra recibe el mismo 409 que un segundo `attend` (R-5).
 
 ### 6.3 Registrar por SOAP (etapa ③)
 
@@ -298,7 +300,7 @@ cada uno las vistas anteriores.
 
 | Escenario | Lógica (§4) | Desarrollo (§5) | Procesos (§6) | Física (§7) | Evidencia |
 |---|---|---|---|---|---|
-| RF-1 registrar válida | `register` + RN-1..RN-3 en `ResourceRequestServiceBean` | `logic`, `data` | Fig. 7 y 9 | presentation → logic → data → postgres | Newman REST/SOAP; captura JSF |
+| RF-1 registrar válida | `register` + RN-1..RN-3 y RN-6 en `ResourceRequestServiceBean` | `logic`, `data` | Fig. 7 y 9 | presentation → logic → data → postgres | Newman REST/SOAP; captura JSF |
 | RF-1 cantidad 0 | `BusinessValidationException` | `contracts` | Fig. 7 y 9 (rama de error) | Igual en los tres clientes | Newman (400 / Fault); captura JSF |
 | RF-2 consultar todas | `findAll` | `data` (orden por id) | Análogo a la fig. 7 | Tres caminos medidos en QA-REN-1 | `scripts/medir-latencia.sh` |
 | RF-3 por id / inexistente | `findById`; `null` → `RequestNotFoundException` | adaptador remoto | Fig. 8 (rama 404) | services → logic → data | Newman |
@@ -327,6 +329,7 @@ Cada decisión sigue la cadena **driver → alternativas → trade-off → decis
 | D-13 | DTO como **JavaBeans** serializables (no `record`) | D-2, QA-INT-1 | Mantener los `record` del T2 | Funcionan en EL 5.0 de Tomcat 10.1 (JSF) y en JAXB (SOAP); más código repetitivo | Spike S-1: tabla JSF leyendo los DTO |
 | D-14 | **Timeout de invocación EJB** (5 s) y una política de conexión común (`RemoteEjbLocator`) | QA-DIS-1 | Sin timeout; timeouts distintos en cada cliente | Fallas detectadas en ≤ 5 s; una operación legítima que tarde más de 5 s fallaría (punto de sensibilidad) | Medición: 135 s sin timeout, 10 s con 10 s |
 | D-15 | Contenedores `logic` y `data` **sin puertos publicados** | Seguridad (limitar exposición) | Publicar todos los puertos | Superficie mínima; depurar requiere entrar a la red de Docker | `docker-compose.yml` |
+| D-16 | **Bloqueo optimista** (`@Version`) en Datos; la Lógica traduce el conflicto a `ALREADY_ATTENDED` | RN-5, R-5 | Bloqueo pesimista (`SELECT ... FOR UPDATE`) que exige una transacción que abarque lectura y escritura (choca con D-11); operación atómica "atender si está PENDIENTE" en el contrato de Datos (lleva una regla de negocio a Datos) | Mantiene D-11 y deja la regla en la Lógica; Datos solo garantiza "escribir si nadie cambió la fila". Agrega un campo `version` al DTO Lógica→Datos y una excepción interna (`CONCURRENT_UPDATE`); los contratos REST, SOAP y JSF no cambian | Pruebas unitarias de `data`; `scripts/rn-5-concurrencia.sh` |
 
 ### Tácticas por escenario
 
@@ -350,7 +353,7 @@ Cada decisión sigue la cadena **driver → alternativas → trade-off → decis
 | R-2 | Latencia acumulada por saltos de red | D-1, D-5, D-6 | Cada capa suma red y serialización | Medida en QA-REN-1; aceptable para el dominio (operación humana) |
 | R-3 | Clientes de ① acoplados a Java y WildFly | D-2 | La UI no puede cambiar de plataforma sin cambiar de protocolo | Es exactamente lo que ③ resuelve (`BACKEND_MODE=rest`) |
 | R-4 | Puntos únicos de falla: gateway y cada capa con un solo nodo | D-6, D-12 | La caída de un contenedor deja sin servicio a sus clientes | Detección rápida (D-14) y recuperación automática al volver; réplicas detrás de un balanceador si se exigiera disponibilidad |
-| R-5 | Dos atenciones simultáneas de la misma solicitud podrían pasar RN-5 | D-11: `findById` y `save` en transacciones distintas | Doble atención en una carrera estrecha | Bloqueo optimista (`@Version`) en Datos, o una operación atómica "atender si está PENDIENTE" en el contrato de Datos |
+| R-5 | Dos atenciones simultáneas de la misma solicitud podrían pasar RN-5 | D-11: `findById` y `save` en transacciones distintas | Doble atención en una carrera estrecha | **Mitigado con D-16** (bloqueo optimista): la segunda escritura falla y se responde 409 |
 | R-6 | Credenciales y API key por defecto en `docker-compose.yml` | Comodidad del taller | Si se despliega tal cual, cualquiera conoce las claves | Se pueden sobrescribir con variables de entorno o un `.env` no versionado |
 
 **Puntos de sensibilidad**
@@ -358,6 +361,8 @@ Cada decisión sigue la cadena **driver → alternativas → trade-off → decis
   negativos ante lentitud transitoria de una capa sana.
 - Límite de `rate-limiting` (D-6): más bajo protege mejor a `services` (QA-DIS-2), pero rechaza tráfico legítimo en picos.
 - `NOT_SUPPORTED` en la Lógica (D-11): define si existe o no una transacción distribuida.
+- Bloqueo optimista (D-16): con mucha contención sobre la misma fila aumentan los rechazos; en este dominio la
+  contención es baja (una solicitud la atiende un operador), así que se prefiere a bloquear filas.
 
 **Trade-offs principales**
 - **Distribuir (D-1/D-2) vs rendimiento:** aislamiento y despliegue por capa a cambio de latencia (QA-REN-1).
@@ -376,7 +381,7 @@ Cada decisión sigue la cadena **driver → alternativas → trade-off → decis
 | Operación continua | QA-DIS-1 | D-14, D-11 | `RemoteEjbLocator`, healthchecks | Procesos, física | `scripts/qa-dis-1.sh`; `docs/evidencias/spikes.md` |
 | Picos de demanda | QA-DIS-2 | D-6 | `gateway` (`rate-limiting`) | Física | `scripts/qa-dis-2.sh` |
 | Costo de distribuir | QA-REN-1 | D-1, D-5, D-6 | Los tres caminos | §3.4 | `scripts/medir-latencia.sh` |
-| RN-1..RN-5 | Error de negocio igual en los tres clientes | D-2, D-4, D-5 | `BusinessException` + traductores | Procesos 6.1–6.3 (ramas de error) | Newman + captura JSF |
+| RN-1..RN-6 | Error de negocio igual en los tres clientes | D-2, D-4, D-5 | `BusinessException` + traductores | Procesos 6.1–6.3 (ramas de error) | Newman + captura JSF |
 
 ---
 
@@ -392,6 +397,8 @@ como pendiente. Las salidas completas están en `docs/evidencias/`.
 | Capa de Datos real (JPA + PostgreSQL) con la cadena del spike | 2026-10-28 | Cumple: RF-1..RF-5, tres errores de negocio y filas persistidas |
 | Timeout EJB ante caída de `data` (antecedente de QA-DIS-1) | 2026-10-28 | Sin timeout: 135 s; con `invocation.timeout=10000`: 10 s; recuperación sin reiniciar otras capas |
 | Pruebas unitarias `contracts` y `data` | 2026-10-28 | 14/14 en verde |
+| Bloqueo optimista en Datos (D-16): pruebas unitarias y despliegue de `data.war` con la columna `version` | 2026-10-29 | 17/17 en verde; Hibernate valida el esquema al desplegar |
+| RN-5 con 10 atenciones simultáneas (`scripts/rn-5-concurrencia.sh`) | — | Pendiente: requiere `logic` y `services` |
 | QA-SEG-1 (gateway, `services` aún sin REST) | 2026-10-28 | Cumple: 401 sin clave y con clave inválida; 0 peticiones rechazadas en el log de `services`; Newman 7/7 |
 | QA-DIS-2 (gateway, `services` aún sin REST) | 2026-10-28 | Cumple: ráfaga de 50 → 27 atendidas, 23 rechazadas con 429; `services` siguió respondiendo |
 | Newman REST y SOAP (QA-INT-1) | — | Pendiente: requiere `services` |

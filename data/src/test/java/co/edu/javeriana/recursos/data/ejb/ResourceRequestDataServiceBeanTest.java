@@ -3,8 +3,10 @@ package co.edu.javeriana.recursos.data.ejb;
 import co.edu.javeriana.recursos.contracts.dto.Priority;
 import co.edu.javeriana.recursos.contracts.dto.RequestStatus;
 import co.edu.javeriana.recursos.contracts.dto.ResourceRequestData;
+import co.edu.javeriana.recursos.contracts.exception.ConcurrentUpdateException;
 import co.edu.javeriana.recursos.data.entity.ResourceRequestEntity;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -64,10 +67,11 @@ class ResourceRequestDataServiceBeanTest {
         ResourceRequestEntity stored = entity(5L, RequestStatus.PENDIENTE);
         when(em.find(ResourceRequestEntity.class, 5L)).thenReturn(stored);
 
-        ResourceRequestData saved = bean.save(data(5L, RequestStatus.ATENDIDA));
+        ResourceRequestData saved = bean.save(data(5L, RequestStatus.ATENDIDA, 0L));
 
         assertEquals(RequestStatus.ATENDIDA, stored.getStatus());
         assertEquals(RequestStatus.ATENDIDA, saved.getStatus());
+        verify(em).flush();
         verify(em, never()).persist(any());
     }
 
@@ -75,7 +79,33 @@ class ResourceRequestDataServiceBeanTest {
     void saveWithUnknownIdFails() {
         when(em.find(ResourceRequestEntity.class, 99L)).thenReturn(null);
 
-        assertThrows(IllegalArgumentException.class, () -> bean.save(data(99L, RequestStatus.ATENDIDA)));
+        assertThrows(IllegalArgumentException.class, () -> bean.save(data(99L, RequestStatus.ATENDIDA, 0L)));
+    }
+
+    @Test
+    void updateWithoutVersionFails() {
+        assertThrows(IllegalArgumentException.class, () -> bean.save(data(5L, RequestStatus.ATENDIDA)));
+        verifyNoInteractions(em);
+    }
+
+    @Test
+    void updateWithStaleVersionIsRejectedAndNothingChanges() {
+        ResourceRequestEntity stored = entity(5L, RequestStatus.ATENDIDA);
+        stored.setVersion(1L); // otra petición ya la atendió
+        when(em.find(ResourceRequestEntity.class, 5L)).thenReturn(stored);
+
+        assertThrows(ConcurrentUpdateException.class, () -> bean.save(data(5L, RequestStatus.ATENDIDA, 0L)));
+        verify(em, never()).flush();
+    }
+
+    @Test
+    void lostRaceDetectedAtFlushIsReportedAsConcurrentUpdate() {
+        when(em.find(ResourceRequestEntity.class, 5L)).thenReturn(entity(5L, RequestStatus.PENDIENTE));
+        doThrow(new OptimisticLockException("fila modificada")).when(em).flush();
+
+        ConcurrentUpdateException e = assertThrows(ConcurrentUpdateException.class,
+                () -> bean.save(data(5L, RequestStatus.ATENDIDA, 0L)));
+        assertEquals(ConcurrentUpdateException.CODE, e.getCode());
     }
 
     @Test
@@ -96,7 +126,7 @@ class ResourceRequestDataServiceBeanTest {
     void findByIdMapsTheEntity() {
         when(em.find(ResourceRequestEntity.class, 3L)).thenReturn(entity(3L, RequestStatus.ATENDIDA));
 
-        assertEquals(new ResourceRequestData(3L, "Inundacion", "Agua", 100, Priority.ALTA, RequestStatus.ATENDIDA),
+        assertEquals(new ResourceRequestData(3L, "Inundacion", "Agua", 100, Priority.ALTA, RequestStatus.ATENDIDA, 0L),
                 bean.findById(3L));
     }
 
@@ -113,7 +143,11 @@ class ResourceRequestDataServiceBeanTest {
     }
 
     private static ResourceRequestData data(Long id, RequestStatus status) {
-        return new ResourceRequestData(id, "Inundacion", "Agua", 100, Priority.ALTA, status);
+        return data(id, status, null);
+    }
+
+    private static ResourceRequestData data(Long id, RequestStatus status, Long version) {
+        return new ResourceRequestData(id, "Inundacion", "Agua", 100, Priority.ALTA, status, version);
     }
 
     private static ResourceRequestEntity entity(Long id, RequestStatus status) {

@@ -9,7 +9,7 @@ sequenceDiagram
     U->>P: envia el formulario de registro
     P->>L: register(command) por EJB remoto
     alt datos validos
-        L->>L: aplica RN-1, RN-2 y RN-3
+        L->>L: aplica RN-1, RN-2, RN-3 y RN-6
         L->>D: save(solicitud sin id) por EJB remoto
         D->>DB: INSERT en una transaccion JTA local
         DB-->>D: id generado

@@ -244,7 +244,7 @@ def etapa1():
     # logic
     s.node(540, 60, 330, 370, "logic", "WildFly 38 · EJB")
     s.component(560, 110, 290, "ResourceRequestServiceBean", "@Stateless · NOT_SUPPORTED",
-                ["implementa ResourceRequestService", "reglas RN-1..RN-5 (código del T2)"])        # 110-192
+                ["implementa ResourceRequestService", "reglas RN-1..RN-6 (código del T2)"])        # 110-192
     s.component(560, 225, 290, "ResourceRequestRepository", "puerto del T2",
                 ["save · findById · findAll"])                                                     # 225-292
     s.component(560, 325, 290, "RemoteResourceRequestRepository", "adaptador",
@@ -313,7 +313,7 @@ def etapas23():
     s.label(460, 505, "SOAP 1.1 por HTTP (sin gateway)")
     # logic
     s.node(1110, 60, 320, 210, "logic", "WildFly 38 · sin cambios desde ①")
-    s.component(1130, 110, 280, "ResourceRequestServiceBean", "@Stateless", ["reglas RN-1..RN-5"])  # 110-177
+    s.component(1130, 110, 280, "ResourceRequestServiceBean", "@Stateless", ["reglas RN-1..RN-6"])  # 110-177
     s.component(1130, 195, 280, "RemoteResourceRequestRepository", "adaptador")                   # 195-247
     s.arrow([(1270, 177), (1270, 195)])
     s.arrow([(990, 135), (1130, 135)])
@@ -359,13 +359,14 @@ def logica():
                ["+ register(CreateResourceRequestCommand) : View", "+ findAll() : List<View>",
                 "+ findById(Long) : View", "+ attend(Long) : View", "+ findPending() : List<View>"],
                italic=True)                                                                         # 80-209
-    s.classbox(515, 240, 330, "DTO serializables", "JavaBeans",
+    s.classbox(515, 230, 330, "DTO serializables", "JavaBeans",
                ["CreateResourceRequestCommand", "ResourceRequestView · ResourceRequestData",
-                "Priority {BAJA, MEDIA, ALTA}", "RequestStatus {PENDIENTE, ATENDIDA}"])            # 240-354
-    s.classbox(515, 380, 330, "BusinessException", "@ApplicationException · abstracta",
+                "Priority {BAJA, MEDIA, ALTA}", "RequestStatus {PENDIENTE, ATENDIDA}"])            # 230-344
+    s.classbox(515, 365, 330, "BusinessException", "@ApplicationException · abstracta",
                ["+ getCode() : String", "BusinessValidationException → VALIDATION_ERROR",
-                "RequestNotFoundException → REQUEST_NOT_FOUND", "AlreadyAttendedException → ALREADY_ATTENDED"],
-               italic=True)                                                                         # 380-494
+                "RequestNotFoundException → REQUEST_NOT_FOUND", "AlreadyAttendedException → ALREADY_ATTENDED",
+                "ConcurrentUpdateException → CONCURRENT_UPDATE (interna)"],
+               italic=True)                                                                         # 365-494
     s.classbox(515, 525, 330, "ResourceRequestDataService", "interface @Remote",
                ["+ save(ResourceRequestData) : ResourceRequestData", "+ findById(Long) : Data (null si no existe)",
                 "+ findAll() : List<Data>"], italic=True)                                           # 525-624
@@ -381,7 +382,7 @@ def logica():
     # logic
     s.package(920, 50, 430, 420, "logic")
     s.classbox(935, 80, 380, "ResourceRequestServiceBean", "@Stateless · NOT_SUPPORTED",
-               ["reglas RN-1..RN-5 (código del T2)"])                                               # 80-149
+               ["reglas RN-1..RN-6 (código del T2)"])                                               # 80-149
     s.classbox(935, 200, 230, "ResourceRequestRepository", "interface · puerto",
                ["save · findById · findAll"], italic=True)                                          # 200-269
     s.classbox(1185, 200, 150, "ResourceRequest", "dominio", ["id · estado …"])
