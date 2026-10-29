@@ -1,0 +1,5 @@
+flowchart LR
+    C["Cliente"] -->|"REST / SOAP"| S["services<br/>WildFly 38<br/>JAX-RS + JAX-WS"]
+    S -->|"EJB remoto"| L["logic"]
+    L -->|"EJB remoto"| D["data"]
+    D --> DB[("PostgreSQL")]

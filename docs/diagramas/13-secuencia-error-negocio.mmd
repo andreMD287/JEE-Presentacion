@@ -1,0 +1,14 @@
+sequenceDiagram
+    participant J as presentation (JSF)
+    participant R as services REST
+    participant W as services SOAP
+    participant L as logic
+    J->>L: register(cantidad 0)
+    L-->>J: BusinessValidationException VALIDATION_ERROR
+    J->>J: FacesMessage con code y mensaje, sin stack trace
+    R->>L: register(cantidad 0)
+    L-->>R: BusinessValidationException
+    R->>R: ExceptionMapper: 400 con code VALIDATION_ERROR
+    W->>L: register(cantidad 0)
+    L-->>W: BusinessValidationException
+    W->>W: SOAP Fault con code VALIDATION_ERROR en detail

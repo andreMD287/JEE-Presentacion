@@ -1,0 +1,18 @@
+sequenceDiagram
+    actor C as Cliente REST
+    participant G as gateway (Kong)
+    participant S as services
+    participant L as logic
+    participant D as data
+    C->>G: PUT /api/v1/requests/7/attend + apikey
+    G->>G: key-auth, rate-limiting, correlation-id
+    G->>S: PUT /services/api/v1/requests/7/attend + X-Correlation-ID
+    S->>L: attend(7) [EJB remoto]
+    L->>D: findById(7)
+    D-->>L: solicitud PENDIENTE
+    L->>L: RN-5: no esta ATENDIDA
+    L->>D: save(estado ATENDIDA)
+    D-->>L: guardada
+    L-->>S: ResourceRequestView ATENDIDA
+    S-->>G: 200 JSON
+    G-->>C: 200 JSON + X-Correlation-ID

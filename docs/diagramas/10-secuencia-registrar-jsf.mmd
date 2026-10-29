@@ -1,0 +1,15 @@
+sequenceDiagram
+    actor U as Operador
+    participant P as presentation (Tomcat)
+    participant L as logic (WildFly)
+    participant D as data (WildFly)
+    participant DB as PostgreSQL
+    U->>P: POST formulario (JSF)
+    P->>L: register(command) [EJB remoto]
+    L->>L: validar RN-1 y RN-2, estado PENDIENTE (RN-3)
+    L->>D: save(data sin id) [EJB remoto, sin transaccion]
+    D->>DB: INSERT (transaccion JTA local)
+    DB-->>D: id generado
+    D-->>L: ResourceRequestData con id
+    L-->>P: ResourceRequestView
+    P-->>U: mensaje "Solicitud registrada" y tabla actualizada

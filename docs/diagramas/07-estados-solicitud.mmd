@@ -1,0 +1,5 @@
+stateDiagram-v2
+    [*] --> PENDIENTE : register (RN-1, RN-2, RN-3)
+    PENDIENTE --> ATENDIDA : attend (RN-4)
+    ATENDIDA --> ATENDIDA : attend rechazado - ALREADY_ATTENDED (RN-5)
+    ATENDIDA --> [*]

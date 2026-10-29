@@ -1,0 +1,11 @@
+sequenceDiagram
+    actor W as Cliente SOAP
+    participant S as services (JAX-WS)
+    participant L as logic
+    participant D as data
+    W->>S: POST ResourceRequestSoapService getRequest(id=7)
+    S->>L: findById(7) [EJB remoto]
+    L->>D: findById(7)
+    D-->>L: ResourceRequestData
+    L-->>S: ResourceRequestView
+    S-->>W: getRequestResponse (XML)

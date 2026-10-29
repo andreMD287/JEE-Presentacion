@@ -1,0 +1,8 @@
+flowchart LR
+    R["Cliente REST"] -->|"REST + apikey"| G(("gateway<br/>Kong 3.9"))
+    J["presentation<br/>BACKEND_MODE=rest"] -->|"REST + apikey"| G
+    G -->|"REST"| S["services"]
+    W["Cliente SOAP"] -->|"SOAP"| S
+    S -->|"EJB remoto"| L["logic"]
+    L -->|"EJB remoto"| D["data"]
+    D --> DB[("PostgreSQL")]
