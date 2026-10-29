@@ -1,7 +1,10 @@
 # Taller 4: capas en servidores separados.
 #   Etapa 1: presentation (Tomcat) -> logic (WildFly) -> data (WildFly) -> postgres
-#   Etapa 2/3: services (WildFly, REST + SOAP) -> logic; gateway (Kong) delante de REST [F4]
+#   Etapa 2: services (WildFly, REST + SOAP) -> logic
+#   Etapa 3: gateway (Kong) delante de REST; SOAP directo a services; presentation en modo rest usa el gateway
 # Arranque: docker compose up -d --build --wait
+
+name: jee-presentacion
 
 x-ejb-credentials: &ejb-credentials
   EJB_USER: ${EJB_USER:-ejbuser}
@@ -92,6 +95,28 @@ services:
       test: ["CMD-SHELL", "test -f /opt/jboss/wildfly/standalone/deployments/services.war.deployed"]
       <<: *wildfly-health
 
+  gateway:
+    image: kong:3.9.4
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      KONG_ADMIN_LISTEN: 127.0.0.1:8001   # admin solo dentro del contenedor
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+    volumes:
+      - ./infra/kong/kong.yml:/kong/kong.yml:ro
+    ports:
+      - "8000:8000"
+    depends_on:
+      services:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   presentation:
     build:
       context: .
@@ -107,6 +132,8 @@ services:
       - "8080:8080"
     depends_on:
       logic:
+        condition: service_healthy
+      gateway:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -fs -o /dev/null http://localhost:8080/recursos/ || exit 1"]

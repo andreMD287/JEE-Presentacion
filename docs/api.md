@@ -65,15 +65,62 @@ Errores con el **mismo cuerpo del T2**: `{"code": "...", "message": "...", "time
 ## 4. SOAP (`services`, etapa ③, sin gateway)
 
 - Servicio `ResourceRequestSoapService`, WSDL: `http://localhost:8082/services/ResourceRequestSoapService?wsdl`
-- Operaciones: `registerRequest`, `listRequests`, `getRequest`, `attendRequest`, `listPendingRequests`.
-- Errores como SOAP Fault con el mismo `code` de la tabla REST (en `detail`) y el mensaje de negocio.
+- Estilo document/literal wrapped (el de JAX-WS por defecto), SOAP 1.1, `targetNamespace = "http://recursos.javeriana.edu.co/soap"`.
+- Operaciones y nombres de elementos (`@WebMethod(operationName)`, `@WebParam(name)`, `@WebResult(name)`):
 
-## 5. Despliegue
+| RF | Operación | Parámetro | Resultado |
+|---|---|---|---|
+| RF-1 | `registerRequest` | `request` (`CreateResourceRequestCommand`) | `request` (`ResourceRequestView`) |
+| RF-2 | `listRequests` | — | `request` repetido (lista de `ResourceRequestView`) |
+| RF-3 | `getRequest` | `id` | `request` |
+| RF-4 | `attendRequest` | `id` | `request` |
+| RF-5 | `listPendingRequests` | — | `request` repetido |
+
+  Los campos de los DTO viajan con sus nombres Java (`id`, `disasterDescription`, `resourceType`, `quantity`, `priority`, `status`).
+- Errores: SOAP Fault (HTTP 500) con `faultstring` = mensaje de negocio y en `detail` un elemento con `<code>` y `<message>`
+  (p. ej. `@WebFault(name = "BusinessFault")` con un bean `{code, message}`). Mismos `code` que la tabla REST.
+- Ejemplo de petición (`registerRequest`):
+
+```xml
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:r="http://recursos.javeriana.edu.co/soap">
+  <soapenv:Body>
+    <r:registerRequest>
+      <request>
+        <disasterDescription>Sismo en Pasto</disasterDescription>
+        <resourceType>Medicamentos</resourceType>
+        <quantity>40</quantity>
+        <priority>ALTA</priority>
+      </request>
+    </r:registerRequest>
+  </soapenv:Body>
+</soapenv:Envelope>
+```
+
+Las colecciones de Newman (`tests/postman/`) prueban exactamente este contrato; ver §5.
+
+## 5. Pruebas de API (Newman)
+
+Newman corre en un contenedor dentro de la red de Compose (`jee-presentacion_default`):
+
+```bash
+docker run --rm --network jee-presentacion_default -v "$PWD/tests/postman:/etc/newman" postman/newman:6-alpine \
+  run rest.postman_collection.json -e gateway.postman_environment.json
+```
+
+| Colección | Qué prueba | Entorno |
+|---|---|---|
+| `rest.postman_collection.json` | RF-1..RF-5 y las 3 reglas de error por REST (13 peticiones) | `gateway` (vía Kong) o `directo` (services) |
+| `soap.postman_collection.json` | WSDL, RF-1..RF-5 y SOAP Faults (10 peticiones) | `gateway` o `directo` (SOAP siempre va directo) |
+| `gateway.postman_collection.json` | QA-SEG-1: 401 sin clave o con clave inválida; `X-Correlation-ID` y límite | `gateway` |
+
+`local.postman_environment.json` sirve para abrir las colecciones en Postman desde el equipo (`localhost`).
+
+## 6. Despliegue
 
 | Servicio Compose | Imagen base | Puerto host | URL |
 |---|---|---|---|
 | `presentation` | `tomcat:10.1-jdk17-temurin` | 8080 | `http://localhost:8080/recursos/` |
-| `gateway` (Kong 3.9 DB-less) | `kong:3.9` | 8000 | admin 8001 no expuesto |
+| `gateway` (Kong 3.9.4 DB-less) | `kong:3.9.4` | 8000 | admin 8001 no expuesto; API key `clave-taller4` en el header `apikey`; 20 peticiones/s y 600/min por consumidor |
 | `services` | `quay.io/wildfly/wildfly:38.0.1.Final-jdk17` | 8082 | REST directo + SOAP |
 | `logic` | ídem | — | solo red interna |
 | `data` | ídem | — | solo red interna |

@@ -1,0 +1,45 @@
+# Kong 3.9 en modo DB-less (decisión D-6). Solo REST pasa por aquí; SOAP entra directo a services (D-7).
+#
+#   cliente --(apikey)--> :8000/api/v1/...  ==>  http://services:8080/services/api/v1/...
+#
+# Cada plugin responde a un escenario de calidad:
+#   key-auth        QA-SEG-1  sin API key -> 401 en el gateway; la petición no llega a services
+#   rate-limiting   QA-DIS-2  por encima del límite -> 429; services no recibe la ráfaga
+#   correlation-id  trazabilidad: el mismo X-Correlation-ID queda en la respuesta y en el log de services
+_format_version: "3.0"
+
+services:
+  - name: recursos-rest
+    url: http://services:8080/services/api/v1
+    connect_timeout: 5000
+    read_timeout: 10000
+    write_timeout: 10000
+    retries: 0            # no reintentar: POST no es idempotente
+    routes:
+      - name: recursos-api-v1
+        paths:
+          - /api/v1
+        strip_path: true  # /api/v1/requests -> /services/api/v1/requests
+        methods: [GET, POST, PUT]
+    plugins:
+      - name: key-auth
+        config:
+          key_names: [apikey]
+          hide_credentials: true   # la clave no viaja a services
+      - name: rate-limiting
+        config:
+          second: 20
+          minute: 600
+          policy: local
+          limit_by: consumer
+      - name: correlation-id
+        config:
+          header_name: X-Correlation-ID
+          generator: uuid
+          echo_downstream: true
+
+consumers:
+  - username: cliente-taller4
+    keyauth_credentials:
+      # Clave de desarrollo; el mismo valor es el API_KEY por defecto de docker-compose.yml
+      - key: clave-taller4

@@ -1,0 +1,80 @@
+{
+  "info": {
+    "name": "Taller 4 - Gateway (QA-SEG-1)",
+    "description": "Controles del API Gateway: sin API key o con una clave inválida la petición se rechaza en Kong (401).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Sin API key",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 401 en el gateway\", () => pm.response.to.have.status(401));",
+              "pm.test(\"responde Kong, no services\", () => pm.expect(pm.response.json().message).to.eql(\"No API key found in request\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{baseUrl}}/requests"
+      }
+    },
+    {
+      "name": "API key inválida",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 401 en el gateway\", () => pm.response.to.have.status(401));",
+              "pm.test(\"responde Kong, no services\", () => pm.expect(pm.response.json().message).to.eql(\"Unauthorized\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "clave-equivocada"
+          }
+        ],
+        "url": "{{baseUrl}}/requests"
+      }
+    },
+    {
+      "name": "Con API key: pasa y lleva X-Correlation-ID",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"no la rechaza el gateway\", () => pm.expect(pm.response.code).to.not.be.oneOf([401, 403, 429]));",
+              "pm.test(\"X-Correlation-ID en la respuesta\", () => pm.expect(pm.response.headers.get(\"X-Correlation-ID\")).to.be.a(\"string\"));",
+              "pm.test(\"informa el límite de peticiones\", () => pm.expect(pm.response.headers.get(\"X-RateLimit-Limit-Second\")).to.eql(\"20\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "apikey",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/requests"
+      }
+    }
+  ]
+}

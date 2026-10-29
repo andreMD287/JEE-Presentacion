@@ -1,0 +1,385 @@
+{
+  "info": {
+    "name": "Taller 4 - SOAP (RF-1..RF-5)",
+    "description": "Servicio ResourceRequestSoapService de services (directo, sin gateway). Namespace http://recursos.javeriana.edu.co/soap. Contrato en docs/api.md.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "WSDL publicado",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "const wsdl = pm.response.text();",
+              "pm.test(\"es un WSDL del namespace acordado\", () => pm.expect(wsdl).to.include('targetNamespace=\"http://recursos.javeriana.edu.co/soap\"'));",
+              "[\"registerRequest\", \"listRequests\", \"getRequest\", \"attendRequest\", \"listPendingRequests\"].forEach(op =>",
+              "  pm.test(\"expone \" + op, () => pm.expect(wsdl).to.include('name=\"' + op + '\"')));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{soapUrl}}?wsdl"
+      }
+    },
+    {
+      "name": "RF-1 registerRequest válida",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const xml = pm.response.text();",
+              "const all = tag => [...xml.matchAll(new RegExp(\"<(?:\\\\w+:)?\" + tag + \">([^<]*)</(?:\\\\w+:)?\" + tag + \">\", \"g\"))].map(m => m[1]);",
+              "const one = tag => all(tag)[0];",
+              "",
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"nace PENDIENTE\", () => pm.expect(one(\"status\")).to.eql(\"PENDIENTE\"));",
+              "pm.test(\"tiene id\", () => pm.expect(Number(one(\"id\"))).to.be.above(0));",
+              "pm.collectionVariables.set(\"soapId\", one(\"id\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/xml; charset=utf-8"
+          },
+          {
+            "key": "SOAPAction",
+            "value": "\"\""
+          }
+        ],
+        "url": "{{soapUrl}}",
+        "body": {
+          "mode": "raw",
+          "raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:r=\"http://recursos.javeriana.edu.co/soap\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <r:registerRequest>\n      <request>\n        <disasterDescription>Sismo en Pasto {{$timestamp}}</disasterDescription>\n        <resourceType>Medicamentos</resourceType>\n        <quantity>40</quantity>\n        <priority>ALTA</priority>\n      </request>\n    </r:registerRequest>\n  </soapenv:Body>\n</soapenv:Envelope>"
+        }
+      }
+    },
+    {
+      "name": "RF-1 Regla: cantidad 0",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const xml = pm.response.text();",
+              "const all = tag => [...xml.matchAll(new RegExp(\"<(?:\\\\w+:)?\" + tag + \">([^<]*)</(?:\\\\w+:)?\" + tag + \">\", \"g\"))].map(m => m[1]);",
+              "const one = tag => all(tag)[0];",
+              "",
+              "pm.test(\"SOAP Fault (HTTP 500)\", () => {",
+              "  pm.response.to.have.status(500);",
+              "  pm.expect(xml).to.match(/<(\\w+:)?Fault>/);",
+              "});",
+              "pm.test(\"código VALIDATION_ERROR en el detail\", () => pm.expect(one(\"code\")).to.eql(\"VALIDATION_ERROR\"));",
+              "pm.test(\"mensaje de negocio\", () => pm.expect(one(\"message\")).to.eql(\"La cantidad debe ser mayor que cero\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/xml; charset=utf-8"
+          },
+          {
+            "key": "SOAPAction",
+            "value": "\"\""
+          }
+        ],
+        "url": "{{soapUrl}}",
+        "body": {
+          "mode": "raw",
+          "raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:r=\"http://recursos.javeriana.edu.co/soap\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <r:registerRequest>\n      <request>\n        <disasterDescription>Sismo en Pasto</disasterDescription>\n        <resourceType>Medicamentos</resourceType>\n        <quantity>0</quantity>\n        <priority>ALTA</priority>\n      </request>\n    </r:registerRequest>\n  </soapenv:Body>\n</soapenv:Envelope>"
+        }
+      }
+    },
+    {
+      "name": "RF-2 listRequests",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const xml = pm.response.text();",
+              "const all = tag => [...xml.matchAll(new RegExp(\"<(?:\\\\w+:)?\" + tag + \">([^<]*)</(?:\\\\w+:)?\" + tag + \">\", \"g\"))].map(m => m[1]);",
+              "const one = tag => all(tag)[0];",
+              "",
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"incluye la registrada\", () => pm.expect(all(\"id\")).to.include(pm.collectionVariables.get(\"soapId\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/xml; charset=utf-8"
+          },
+          {
+            "key": "SOAPAction",
+            "value": "\"\""
+          }
+        ],
+        "url": "{{soapUrl}}",
+        "body": {
+          "mode": "raw",
+          "raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:r=\"http://recursos.javeriana.edu.co/soap\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <r:listRequests/>\n  </soapenv:Body>\n</soapenv:Envelope>"
+        }
+      }
+    },
+    {
+      "name": "RF-3 getRequest",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const xml = pm.response.text();",
+              "const all = tag => [...xml.matchAll(new RegExp(\"<(?:\\\\w+:)?\" + tag + \">([^<]*)</(?:\\\\w+:)?\" + tag + \">\", \"g\"))].map(m => m[1]);",
+              "const one = tag => all(tag)[0];",
+              "",
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"es la solicitud pedida\", () => pm.expect(one(\"id\")).to.eql(pm.collectionVariables.get(\"soapId\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/xml; charset=utf-8"
+          },
+          {
+            "key": "SOAPAction",
+            "value": "\"\""
+          }
+        ],
+        "url": "{{soapUrl}}",
+        "body": {
+          "mode": "raw",
+          "raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:r=\"http://recursos.javeriana.edu.co/soap\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <r:getRequest>\n      <id>{{soapId}}</id>\n    </r:getRequest>\n  </soapenv:Body>\n</soapenv:Envelope>"
+        }
+      }
+    },
+    {
+      "name": "RF-3 Solicitud inexistente",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const xml = pm.response.text();",
+              "const all = tag => [...xml.matchAll(new RegExp(\"<(?:\\\\w+:)?\" + tag + \">([^<]*)</(?:\\\\w+:)?\" + tag + \">\", \"g\"))].map(m => m[1]);",
+              "const one = tag => all(tag)[0];",
+              "",
+              "pm.test(\"SOAP Fault (HTTP 500)\", () => {",
+              "  pm.response.to.have.status(500);",
+              "  pm.expect(xml).to.match(/<(\\w+:)?Fault>/);",
+              "});",
+              "pm.test(\"código REQUEST_NOT_FOUND en el detail\", () => pm.expect(one(\"code\")).to.eql(\"REQUEST_NOT_FOUND\"));",
+              "pm.test(\"mensaje de negocio\", () => pm.expect(one(\"message\")).to.eql(\"No existe la solicitud con id 999999999\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/xml; charset=utf-8"
+          },
+          {
+            "key": "SOAPAction",
+            "value": "\"\""
+          }
+        ],
+        "url": "{{soapUrl}}",
+        "body": {
+          "mode": "raw",
+          "raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:r=\"http://recursos.javeriana.edu.co/soap\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <r:getRequest>\n      <id>999999999</id>\n    </r:getRequest>\n  </soapenv:Body>\n</soapenv:Envelope>"
+        }
+      }
+    },
+    {
+      "name": "RF-5 listPendingRequests incluye la nueva",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const xml = pm.response.text();",
+              "const all = tag => [...xml.matchAll(new RegExp(\"<(?:\\\\w+:)?\" + tag + \">([^<]*)</(?:\\\\w+:)?\" + tag + \">\", \"g\"))].map(m => m[1]);",
+              "const one = tag => all(tag)[0];",
+              "",
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"solo PENDIENTE\", () => all(\"status\").forEach(s => pm.expect(s).to.eql(\"PENDIENTE\")));",
+              "pm.test(\"incluye la registrada\", () => pm.expect(all(\"id\")).to.include(pm.collectionVariables.get(\"soapId\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/xml; charset=utf-8"
+          },
+          {
+            "key": "SOAPAction",
+            "value": "\"\""
+          }
+        ],
+        "url": "{{soapUrl}}",
+        "body": {
+          "mode": "raw",
+          "raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:r=\"http://recursos.javeriana.edu.co/soap\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <r:listPendingRequests/>\n  </soapenv:Body>\n</soapenv:Envelope>"
+        }
+      }
+    },
+    {
+      "name": "RF-4 attendRequest",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const xml = pm.response.text();",
+              "const all = tag => [...xml.matchAll(new RegExp(\"<(?:\\\\w+:)?\" + tag + \">([^<]*)</(?:\\\\w+:)?\" + tag + \">\", \"g\"))].map(m => m[1]);",
+              "const one = tag => all(tag)[0];",
+              "",
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"queda ATENDIDA\", () => pm.expect(one(\"status\")).to.eql(\"ATENDIDA\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/xml; charset=utf-8"
+          },
+          {
+            "key": "SOAPAction",
+            "value": "\"\""
+          }
+        ],
+        "url": "{{soapUrl}}",
+        "body": {
+          "mode": "raw",
+          "raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:r=\"http://recursos.javeriana.edu.co/soap\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <r:attendRequest>\n      <id>{{soapId}}</id>\n    </r:attendRequest>\n  </soapenv:Body>\n</soapenv:Envelope>"
+        }
+      }
+    },
+    {
+      "name": "RF-4 Regla: atender dos veces",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const xml = pm.response.text();",
+              "const all = tag => [...xml.matchAll(new RegExp(\"<(?:\\\\w+:)?\" + tag + \">([^<]*)</(?:\\\\w+:)?\" + tag + \">\", \"g\"))].map(m => m[1]);",
+              "const one = tag => all(tag)[0];",
+              "",
+              "pm.test(\"SOAP Fault (HTTP 500)\", () => {",
+              "  pm.response.to.have.status(500);",
+              "  pm.expect(xml).to.match(/<(\\w+:)?Fault>/);",
+              "});",
+              "pm.test(\"código ALREADY_ATTENDED en el detail\", () => pm.expect(one(\"code\")).to.eql(\"ALREADY_ATTENDED\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/xml; charset=utf-8"
+          },
+          {
+            "key": "SOAPAction",
+            "value": "\"\""
+          }
+        ],
+        "url": "{{soapUrl}}",
+        "body": {
+          "mode": "raw",
+          "raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:r=\"http://recursos.javeriana.edu.co/soap\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <r:attendRequest>\n      <id>{{soapId}}</id>\n    </r:attendRequest>\n  </soapenv:Body>\n</soapenv:Envelope>"
+        }
+      }
+    },
+    {
+      "name": "RF-5 listPendingRequests ya no la incluye",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const xml = pm.response.text();",
+              "const all = tag => [...xml.matchAll(new RegExp(\"<(?:\\\\w+:)?\" + tag + \">([^<]*)</(?:\\\\w+:)?\" + tag + \">\", \"g\"))].map(m => m[1]);",
+              "const one = tag => all(tag)[0];",
+              "",
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"la atendida salió de pendientes\", () => pm.expect(all(\"id\")).to.not.include(pm.collectionVariables.get(\"soapId\")));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/xml; charset=utf-8"
+          },
+          {
+            "key": "SOAPAction",
+            "value": "\"\""
+          }
+        ],
+        "url": "{{soapUrl}}",
+        "body": {
+          "mode": "raw",
+          "raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:r=\"http://recursos.javeriana.edu.co/soap\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <r:listPendingRequests/>\n  </soapenv:Body>\n</soapenv:Envelope>"
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "soapId",
+      "value": ""
+    }
+  ]
+}
