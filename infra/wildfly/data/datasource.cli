@@ -1,7 +1,8 @@
 # Driver de PostgreSQL como módulo y datasource RecursosDS (JTA) para la capa de Datos.
 # La URL y las credenciales se leen de variables de entorno al arrancar el servidor.
+# El pool abre 2 conexiones al arrancar (pool-prefill) para que la primera petición no pague la conexión (D-17).
 embed-server --std-out=echo
 module add --name=org.postgresql --resources=/tmp/drivers/postgresql.jar --dependencies=jakarta.transaction.api
 /subsystem=datasources/jdbc-driver=postgresql:add(driver-name=postgresql,driver-module-name=org.postgresql,driver-xa-datasource-class-name=org.postgresql.xa.PGXADataSource)
-/subsystem=datasources/data-source=RecursosDS:add(jndi-name=java:jboss/datasources/RecursosDS,driver-name=postgresql,connection-url="${env.DB_URL:jdbc:postgresql://postgres:5432/recursos}",user-name="${env.DB_USER:recursos}",password="${env.DB_PASSWORD:recursos}",validate-on-match=true,background-validation=false,valid-connection-checker-class-name=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker,exception-sorter-class-name=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter)
+/subsystem=datasources/data-source=RecursosDS:add(jndi-name=java:jboss/datasources/RecursosDS,driver-name=postgresql,connection-url="${env.DB_URL:jdbc:postgresql://postgres:5432/recursos}",user-name="${env.DB_USER:recursos}",password="${env.DB_PASSWORD:recursos}",validate-on-match=true,background-validation=false,valid-connection-checker-class-name=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker,exception-sorter-class-name=org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter,min-pool-size=2,initial-pool-size=2,pool-prefill=true)
 stop-embedded-server

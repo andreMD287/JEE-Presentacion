@@ -330,6 +330,7 @@ Cada decisión sigue la cadena **driver → alternativas → trade-off → decis
 | D-14 | **Timeout de invocación EJB** (5 s) y una política de conexión común (`RemoteEjbLocator`) | QA-DIS-1 | Sin timeout; timeouts distintos en cada cliente | Fallas detectadas en ≤ 5 s; una operación legítima que tarde más de 5 s fallaría (punto de sensibilidad) | Medición: 135 s sin timeout, 10 s con 10 s |
 | D-15 | Contenedores `logic` y `data` **sin puertos publicados** | Seguridad (limitar exposición) | Publicar todos los puertos | Superficie mínima; depurar requiere entrar a la red de Docker | `docker-compose.yml` |
 | D-16 | **Bloqueo optimista** (`@Version`) en Datos; la Lógica traduce el conflicto a `ALREADY_ATTENDED` | RN-5, R-5 | Bloqueo pesimista (`SELECT ... FOR UPDATE`) que exige una transacción que abarque lectura y escritura (choca con D-11); operación atómica "atender si está PENDIENTE" en el contrato de Datos (lleva una regla de negocio a Datos) | Mantiene D-11 y deja la regla en la Lógica; Datos solo garantiza "escribir si nadie cambió la fila". Agrega un campo `version` al DTO Lógica→Datos y una excepción interna (`CONCURRENT_UPDATE`); los contratos REST, SOAP y JSF no cambian | Pruebas unitarias de `data`; `scripts/rn-5-concurrencia.sh` |
+| D-17 | **Precalentamiento al arrancar**: cada capa ejecuta sus caminos remotos (y su conexión hacia la capa siguiente) durante el despliegue, antes de que el healthcheck la marque sana | QA-DIS-1, D-14 | Subir el timeout a 10 s; reintentar la llamada | Mantiene el timeout de 5 s y la detección rápida; el primer usuario no paga el arranque. El arranque tarda ~1 s más y "sano" pasa a significar "listo para responder" | `docs/evidencias/calentamiento.md`: con `data` precalentado la primera llamada tras volver baja de ~800 ms a < 100 ms |
 
 ### Tácticas por escenario
 
@@ -338,7 +339,7 @@ Cada decisión sigue la cadena **driver → alternativas → trade-off → decis
 | QA-MOD-1 | Encapsular; usar un intermediario; restringir dependencias; diferir el enlace (configuración en el despliegue) | `RequestGateway` + `BACKEND_MODE`; `contracts`; puerto/adaptador |
 | QA-INT-1 | Adherirse a estándares (HTTP/JSON, SOAP/WSDL); adaptar la interfaz (tailor interface); usar un intermediario | `services` |
 | QA-SEG-1 | Autenticar actores; limitar el acceso; limitar la exposición | Kong `key-auth`; usuario de aplicación EJB; `logic` y `data` sin puertos |
-| QA-DIS-1 | Detección de excepciones; timeout; manejo de excepciones; reintroducción sin reinicio de las demás capas | `RemoteEjbLocator` (timeout); manejo en JSF/REST/SOAP; healthchecks |
+| QA-DIS-1 | Detección de excepciones; timeout; manejo de excepciones; reintroducción sin reinicio de las demás capas; precalentamiento antes de reintroducir el componente | `RemoteEjbLocator` (timeout); manejo en JSF/REST/SOAP; `DataWarmup` y calentamiento de cada cliente EJB (D-17); healthchecks |
 | QA-DIS-2 | Gestionar las peticiones de trabajo / limitar la respuesta a eventos | Kong `rate-limiting` |
 | QA-REN-1 | (Medición, no táctica): cuantifica el costo de usar un intermediario | `scripts/medir-latencia.sh` |
 | Trazabilidad | Auditoría: correlación de peticiones | Kong `correlation-id` + log de acceso de `services` |
@@ -361,6 +362,8 @@ Cada decisión sigue la cadena **driver → alternativas → trade-off → decis
   negativos ante lentitud transitoria de una capa sana.
 - Límite de `rate-limiting` (D-6): más bajo protege mejor a `services` (QA-DIS-2), pero rechaza tráfico legítimo en picos.
 - `NOT_SUPPORTED` en la Lógica (D-11): define si existe o no una transacción distribuida.
+- Primera llamada tras un arranque (D-14 + D-17): un cliente EJB recién iniciado tarda 2–3,9 s y un servidor
+  recién iniciado ~0,8–1,7 s más; sin precalentamiento, la suma puede superar el timeout de 5 s.
 - Bloqueo optimista (D-16): con mucha contención sobre la misma fila aumentan los rechazos; en este dominio la
   contención es baja (una solicitud la atiende un operador), así que se prefiere a bloquear filas.
 
@@ -378,7 +381,7 @@ Cada decisión sigue la cadena **driver → alternativas → trade-off → decis
 | CON-1, QA-MOD-1 | QA-MOD-1 | D-3, D-4, D-8 | `RequestGateway`, puerto/adaptador, `contracts` | Lógica, desarrollo | `scripts/qa-mod-1.sh` + `git diff` |
 | CON-2 | QA-INT-1 | D-5, D-13 | `services` (JAX-RS, JAX-WS) | Lógica, procesos 6.2 y 6.3 (fig. 8 y 9) | Newman REST y SOAP |
 | CON-2 | QA-SEG-1 | D-6, D-10, D-15 | `gateway` (`key-auth`) | Física | `scripts/qa-seg-1.sh` |
-| Operación continua | QA-DIS-1 | D-14, D-11 | `RemoteEjbLocator`, healthchecks | Procesos, física | `scripts/qa-dis-1.sh`; `docs/evidencias/spikes.md` |
+| Operación continua | QA-DIS-1 | D-14, D-11, D-17 | `RemoteEjbLocator`, healthchecks | Procesos, física | `scripts/qa-dis-1.sh`; `docs/evidencias/spikes.md`; `docs/evidencias/calentamiento.md` |
 | Picos de demanda | QA-DIS-2 | D-6 | `gateway` (`rate-limiting`) | Física | `scripts/qa-dis-2.sh` |
 | Costo de distribuir | QA-REN-1 | D-1, D-5, D-6 | Los tres caminos | §3.4 | `scripts/medir-latencia.sh` |
 | RN-1..RN-6 | Error de negocio igual en los tres clientes | D-2, D-4, D-5 | `BusinessException` + traductores | Procesos 6.1–6.3 (ramas de error) | Newman + captura JSF |
@@ -398,6 +401,7 @@ como pendiente. Las salidas completas están en `docs/evidencias/`.
 | Timeout EJB ante caída de `data` (antecedente de QA-DIS-1) | 2026-10-28 | Sin timeout: 135 s; con `invocation.timeout=10000`: 10 s; recuperación sin reiniciar otras capas |
 | Pruebas unitarias `contracts` y `data` | 2026-10-28 | 14/14 en verde |
 | Bloqueo optimista en Datos (D-16): pruebas unitarias y despliegue de `data.war` con la columna `version` | 2026-10-29 | 17/17 en verde; Hibernate valida el esquema al desplegar |
+| Primera llamada tras reiniciar `data` (D-17), cliente de larga vida | 2026-10-29 | Sin precalentamiento: 718–813 ms; con precalentamiento: 29–88 ms; 0 timeouts. Pruebas `contracts` + `data`: 19/19 |
 | RN-5 con 10 atenciones simultáneas (`scripts/rn-5-concurrencia.sh`) | — | Pendiente: requiere `logic` y `services` |
 | QA-SEG-1 (gateway, `services` aún sin REST) | 2026-10-28 | Cumple: 401 sin clave y con clave inválida; 0 peticiones rechazadas en el log de `services`; Newman 7/7 |
 | QA-DIS-2 (gateway, `services` aún sin REST) | 2026-10-28 | Cumple: ráfaga de 50 → 27 atendidas, 23 rechazadas con 429; `services` siguió respondiendo |

@@ -37,6 +37,12 @@ Motivos: la EL de Tomcat 10.1 (EL 5.0) no lee componentes de `record` en JSF (`#
   ```
   El proxy se puede guardar y reutilizar (es seguro entre hilos y se reconecta cuando la capa vuelve).
 - Timeout: `EJB_INVOCATION_TIMEOUT_MS` (5000 por defecto). Si la capa remota cae, la llamada lanza `jakarta.ejb.EJBException` (causa `TimeoutException`) o `org.jboss.ejb.client.RequestSendFailedException` en ≤ 5 s; el cliente debe mostrar un mensaje controlado (QA-DIS-1). Sin timeout la primera falla tardaba ~135 s.
+- Precalentamiento (D-17): cada cliente EJB hace una llamada de lectura al arrancar, de mejor esfuerzo (si falla,
+  registra y sigue), para que el costo de la primera conexión (2–3,9 s medidos) no lo pague el primer usuario.
+  `data` ya lo hace (`DataWarmup`, `@Startup @Singleton`). En `logic` y `services`: `@Startup @Singleton` con
+  `@PostConstruct` que llama `findAll()`. En `presentation` (Tomcat): un `ServletContextListener` que hace lo mismo
+  con el gateway del modo activo. En WildFly, `@Startup` corre antes de que exista el marcador `.deployed`, así que el
+  healthcheck solo reporta sano con la capa ya caliente. Detalle y mediciones: `docs/evidencias/calentamiento.md`.
 - Bloqueo optimista (D-16): `save` de una solicitud existente exige la `version` leída (si viene `null` lanza
   `IllegalArgumentException`). Lo más simple en Lógica es conservar la versión que trae `findById` y reenviarla al
   guardar; si el modelo de dominio se reconstruye en el adaptador, el dominio debe llevar `version` como dato opaco
