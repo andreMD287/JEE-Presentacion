@@ -24,6 +24,14 @@
             <artifactId>jakarta.jakartaee-api</artifactId>
         </dependency>
 
+        <!-- Implementacion JAX-RS solo para ejecutar Response.status()/created() en JUnit. -->
+        <!-- WildFly ya proporciona RESTEasy en produccion: no empaquetar esta dependencia. -->
+        <dependency>
+            <groupId>org.jboss.resteasy</groupId>
+            <artifactId>resteasy-core</artifactId>
+            <version>6.2.14.Final</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
