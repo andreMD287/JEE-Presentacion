@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core">
+<f:metadata><f:viewAction action="#{requests.load}" onPostback="false"/></f:metadata>
+<h:head>
+    <title>Gestión de recursos · Javeriana</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <h:outputStylesheet library="css" name="app.css"/>
+</h:head>
+<h:body>
+    <div class="app-shell">
+        <header class="topbar">
+            <div class="brand"><span class="brand-mark">R</span>
+                <span><strong>Gestión de recursos</strong><small>Coordinación de emergencias</small></span>
+            </div>
+            <span class="mode-pill">Conexión <h:outputText value="#{requests.mode}"/></span>
+        </header>
+        <main class="layout">
+            <section class="hero">
+                <div><p class="eyebrow">PANEL DE OPERACIONES</p>
+                    <h1>Solicitudes de recursos</h1>
+                    <p>Registra necesidades, consulta solicitudes y realiza el seguimiento de la atención.</p>
+                </div>
+                <div class="hero-meta"><span class="dot"/> Sistema de gestión</div>
+            </section>
+            <h:panelGroup layout="block" styleClass="notice success" rendered="#{not empty requests.notice}">
+                <h:outputText value="#{requests.notice}"/>
+            </h:panelGroup>
+            <h:panelGroup layout="block" styleClass="notice error" rendered="#{not empty requests.error}">
+                <h:outputText value="#{requests.error}"/>
+            </h:panelGroup>
+            <div class="stats">
+                <div class="stat"><span>Total de solicitudes</span><strong><h:outputText value="#{requests.totalCount}"/></strong></div>
+                <div class="stat"><span>Pendientes</span><strong><h:outputText value="#{requests.pendingCount}"/></strong></div>
+                <div class="stat"><span>Atendidas</span><strong><h:outputText value="#{requests.attendedCount}"/></strong></div>
+            </div>
+            <div class="two-columns">
+                <section class="panel">
+                    <div class="panel-header"><div><p class="eyebrow">RF-1</p><h2>Nueva solicitud</h2></div></div>
+                    <h:form id="registerForm" styleClass="form-grid">
+                        <div class="field"><h:outputLabel for="description" value="Descripción del desastre"/>
+                            <h:inputTextarea id="description" value="#{requests.description}" rows="3" styleClass="control" maxlength="500"/>
+                        </div>
+                        <div class="field"><h:outputLabel for="resourceType" value="Tipo de recurso"/>
+                            <h:inputText id="resourceType" value="#{requests.resourceType}" styleClass="control" maxlength="120"/>
+                        </div>
+                        <div class="field-group">
+                            <div class="field"><h:outputLabel for="quantity" value="Cantidad"/>
+                                <h:inputText id="quantity" value="#{requests.quantity}" styleClass="control"/>
+                            </div>
+                            <div class="field"><h:outputLabel for="priority" value="Prioridad"/>
+                                <h:selectOneMenu id="priority" value="#{requests.priority}" styleClass="control">
+                                    <f:selectItem itemValue="BAJA" itemLabel="Baja"/>
+                                    <f:selectItem itemValue="MEDIA" itemLabel="Media"/>
+                                    <f:selectItem itemValue="ALTA" itemLabel="Alta"/>
+                                </h:selectOneMenu>
+                            </div>
+                        </div>
+                        <h:messages styleClass="validation" showDetail="true"/>
+                        <h:commandButton value="Registrar solicitud" action="#{requests.register}" styleClass="btn btn-primary"/>
+                    </h:form>
+                </section>
+                <section class="panel">
+                    <div class="panel-header"><div><p class="eyebrow">RF-3</p><h2>Buscar por identificador</h2></div></div>
+                    <h:form id="searchForm" styleClass="form-grid">
+                        <div class="field"><h:outputLabel for="searchId" value="ID de la solicitud"/>
+                            <h:inputText id="searchId" value="#{requests.searchId}" styleClass="control"/>
+                        </div>
+                        <h:messages styleClass="validation" showDetail="true"/>
+                        <h:commandButton value="Consultar solicitud" action="#{requests.search}" styleClass="btn btn-secondary"/>
+                    </h:form>
+                    <h:panelGroup layout="block" styleClass="result-card" rendered="#{not empty requests.selected}">
+                        <div class="result-top"><strong>Solicitud #<h:outputText value="#{requests.selected.id}"/></strong>
+                            <span><h:outputText value="#{requests.selected.status}"/></span></div>
+                        <p><h:outputText value="#{requests.selected.disasterDescription}"/></p>
+                        <dl><dt>Recurso</dt><dd><h:outputText value="#{requests.selected.resourceType}"/></dd>
+                            <dt>Cantidad</dt><dd><h:outputText value="#{requests.selected.quantity}"/></dd>
+                            <dt>Prioridad</dt><dd><h:outputText value="#{requests.selected.priority}"/></dd></dl>
+                        <h:form rendered="#{requests.selected.status eq 'PENDIENTE'}">
+                            <h:commandButton value="Marcar como atendida" action="#{requests.attend(requests.selected.id)}"
+                                             onclick="return confirm('¿Confirmas la atención de esta solicitud?')"
+                                             styleClass="btn btn-primary"/>
+                        </h:form>
+                    </h:panelGroup>
+                </section>
+            </div>
+            <section class="panel full-panel">
+                <div class="panel-header list-header"><div><p class="eyebrow">RF-2 · RF-4 · RF-5</p><h2>Listado de solicitudes</h2></div>
+                    <h:form styleClass="list-actions">
+                        <h:commandButton value="#{requests.onlyPending ? 'Ver todas' : 'Solo pendientes'}"
+                                         action="#{requests.togglePending}" styleClass="btn btn-secondary"/>
+                        <h:commandButton value="Actualizar" action="#{requests.reload}" styleClass="btn btn-plain"/>
+                    </h:form>
+                </div>
+                <div class="table-wrap">
+                    <h:dataTable value="#{requests.shownRequests}" var="item" styleClass="data-table"
+                                 rowClasses="data-row,data-row-alt" rendered="#{not empty requests.shownRequests}">
+                        <h:column><f:facet name="header">ID</f:facet><strong>#<h:outputText value="#{item.id}"/></strong></h:column>
+                        <h:column><f:facet name="header">Desastre</f:facet><h:outputText value="#{item.disasterDescription}"/></h:column>
+                        <h:column><f:facet name="header">Recurso</f:facet><h:outputText value="#{item.resourceType}"/></h:column>
+                        <h:column><f:facet name="header">Cantidad</f:facet><h:outputText value="#{item.quantity}"/></h:column>
+                        <h:column><f:facet name="header">Prioridad</f:facet><h:outputText value="#{item.priority}"/></h:column>
+                        <h:column><f:facet name="header">Estado</f:facet><h:outputText value="#{item.status}" styleClass="status-label"/></h:column>
+                        <h:column><f:facet name="header">Acción</f:facet>
+                            <h:form rendered="#{item.status eq 'PENDIENTE'}">
+                                <h:commandButton value="Atender" action="#{requests.attend(item.id)}"
+                                                 onclick="return confirm('¿Marcar esta solicitud como atendida?')"
+                                                 styleClass="btn btn-small"/>
+                            </h:form>
+                            <h:outputText value="—" rendered="#{item.status eq 'ATENDIDA'}"/>
+                        </h:column>
+                    </h:dataTable>
+                    <h:panelGroup layout="block" rendered="#{empty requests.shownRequests}" styleClass="empty-state">
+                        No hay solicitudes para mostrar.
+                    </h:panelGroup>
+                </div>
+            </section>
+        </main>
+        <footer>Ingeniería de Sistemas · Arquitectura de Software · Taller 4</footer>
+    </div>
+</h:body>
+</html>
