@@ -1,0 +1,15 @@
+== QA-DIS-1 | 2026-10-30 14:54:01 | dccad91
+   evidencia: docs/evidencias/qa/QA-DIS-1-20261030-145401.txt
+1) Todo arriba:
+   JSF (etapa 1, EJB)           HTTP 200       en   113 ms | muestra: datos            | stack trace visible: no
+   REST vía gateway (etapa 3)  HTTP 200       en   107 ms | muestra: datos            | stack trace visible: no
+2) Se detiene data:
+   JSF (etapa 1, EJB)           HTTP 200-error en   101 ms | muestra: error controlado | stack trace visible: no
+   REST vía gateway (etapa 3)  HTTP 500-error en   155 ms | muestra: error controlado | stack trace visible: no
+3) Se reinicia solo data:
+   JSF (etapa 1, EJB)           HTTP 200       en   131 ms | muestra: datos            | stack trace visible: no
+   REST vía gateway (etapa 3)  HTTP 200       en   124 ms | muestra: datos            | stack trace visible: no
+Peor tiempo de respuesta con data caído: 155 ms | respuestas con stack trace: 0
+Clientes que volvieron a responder 200: 2 de 2
+logic, services y presentation no se reiniciaron
+RESULTADO: CUMPLE - falla controlada en <= 5 s (+1 s de margen) y recuperación sin reiniciar las otras capas

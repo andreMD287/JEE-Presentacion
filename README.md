@@ -46,7 +46,7 @@ La pantalla JSF cambia de la etapa ① a la ③ solo con la variable `BACKEND_MO
 | Despliegue reproducible | `docker-compose.yml`, `infra/` |
 | Pruebas de API (Newman) | `tests/postman/` |
 | Scripts de los escenarios de calidad | `scripts/` |
-| Evidencias de ejecución | `docs/evidencias/` |
+| Evidencias de ejecución (salidas de los escenarios y capturas de la JSF) | `docs/evidencias/` |
 | Paquete de entrega | `Taller4_Entrega.zip`, generado con `python scripts/empaquetar.py` |
 
 ---

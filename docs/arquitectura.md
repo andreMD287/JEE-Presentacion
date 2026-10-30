@@ -300,8 +300,8 @@ cada uno las vistas anteriores.
 
 | Escenario | Lógica (§4) | Desarrollo (§5) | Procesos (§6) | Física (§7) | Evidencia |
 |---|---|---|---|---|---|
-| RF-1 registrar válida | `register` + RN-1..RN-3 y RN-6 en `ResourceRequestServiceBean` | `logic`, `data` | Fig. 7 y 9 | presentation → logic → data → postgres | Newman REST/SOAP; captura JSF |
-| RF-1 cantidad 0 | `BusinessValidationException` | `contracts` | Fig. 7 y 9 (rama de error) | Igual en los tres clientes | Newman (400 / Fault); captura JSF |
+| RF-1 registrar válida | `register` + RN-1..RN-3 y RN-6 en `ResourceRequestServiceBean` | `logic`, `data` | Fig. 7 y 9 | presentation → logic → data → postgres | Newman REST/SOAP; capturas JSF |
+| RF-1 cantidad 0 | `BusinessValidationException` | `contracts` | Fig. 7 y 9 (rama de error) | Igual en los tres clientes | Newman (400 / Fault); captura JSF 02 |
 | RF-2 consultar todas | `findAll` | `data` (orden por id) | Análogo a la fig. 7 | Tres caminos medidos en QA-REN-1 | `scripts/medir-latencia.sh` |
 | RF-3 por id / inexistente | `findById`; `null` → `RequestNotFoundException` | adaptador remoto | Fig. 8 (rama 404) | services → logic → data | Newman |
 | RF-4 atender / dos veces | `attend` + RN-4, RN-5 | `logic` | Fig. 8 | gateway → services → logic → data | Newman (200 / 409) |
@@ -384,7 +384,7 @@ Cada decisión sigue la cadena **driver → alternativas → trade-off → decis
 | Operación continua | QA-DIS-1 | D-14, D-11, D-17 | `RemoteEjbLocator`, healthchecks | Procesos, física | `scripts/qa-dis-1.sh`; `docs/evidencias/spikes.md`; `docs/evidencias/calentamiento.md` |
 | Picos de demanda | QA-DIS-2 | D-6 | `gateway` (`rate-limiting`) | Física | `scripts/qa-dis-2.sh` |
 | Costo de distribuir | QA-REN-1 | D-1, D-5, D-6 | Los tres caminos | §3.4 | `scripts/medir-latencia.sh` |
-| RN-1..RN-6 | Error de negocio igual en los tres clientes | D-2, D-4, D-5 | `BusinessException` + traductores | Procesos 6.1–6.3 (ramas de error) | Newman + captura JSF |
+| RN-1..RN-6 | Error de negocio igual en los tres clientes | D-2, D-4, D-5 | `BusinessException` + traductores | Procesos 6.1–6.3 (ramas de error) | Newman + capturas JSF (`docs/evidencias/jsf/`) |
 
 ---
 
@@ -401,10 +401,11 @@ Las cifras de esta sección son las que imprimieron las pruebas y los scripts. L
 | QA-INT-1 | `scripts/qa-int-1.sh` | Newman REST vía Kong 47/47, REST directo 47/47 y SOAP 35/35 aserciones | Sí |
 | QA-SEG-1 | `scripts/qa-seg-1.sh` | 401 sin clave y con clave inválida; solo la petición con clave llegó a `services` (por su `X-Correlation-ID`); Newman 7/7 | Sí |
 | QA-DIS-2 | `scripts/qa-dis-2.sh` | Ráfaga de 50 en 892 ms: 32 atendidas, 18 rechazadas con 429; `services` respondió 200 justo después | Sí |
-| QA-DIS-1 | `scripts/qa-dis-1.sh` | Con `data` detenido: JSF y REST responden en ≤ 153 ms con mensaje controlado y sin trazas; al reiniciar solo `data`, los dos clientes vuelven a 200 sin reiniciar `logic`, `services` ni `presentation` | Sí |
+| QA-DIS-1 | `scripts/qa-dis-1.sh` | Con `data` detenido: JSF y REST responden en ≤ 155 ms con mensaje controlado y sin trazas (el script revisa el contenido, no solo el código HTTP); al reiniciar solo `data`, los dos clientes vuelven a 200 sin reiniciar `logic`, `services` ni `presentation` | Sí |
 | QA-MOD-1 | `scripts/qa-mod-1.sh` | Misma imagen de `presentation` en `ejb` → `rest` → `ejb`; en `rest` la pantalla llega a `services` por Kong (2 peticiones en su log), en `ejb` ninguna; 0 cambios en `logic` y `data` | Sí |
 | QA-REN-1 | `scripts/medir-latencia.sh` | 100 consultas RF-2 por camino. ① JSF→EJB: p50 26,6 ms, p95 38,1 ms (incluye generar el HTML). ② REST directo: p50 18,4 ms, p95 33,2 ms. ③ REST vía Kong: p50 19,0 ms, p95 31,4 ms | Medido |
 | RN-5 concurrente | `scripts/rn-5-concurrencia.sh` | 10 atenciones simultáneas de la misma solicitud: 1 × 200 y 9 × 409 `ALREADY_ATTENDED`; queda `ATENDIDA` | Sí |
+| Recorrido JSF | `docs/evidencias/jsf/` (8 capturas) | RF-1..RF-5 y RN-1 en modo EJB; cambio a modo REST con la misma imagen; mensaje controlado con `data` caído y recuperación sin reiniciar otras capas | Sí |
 
 Lectura de QA-REN-1: el gateway agrega menos de 1 ms en la mediana (② vs ③), así que su costo es despreciable frente
 a lo que aporta (QA-SEG-1, QA-DIS-2). La diferencia de ① se debe sobre todo a que mide la página completa y no solo

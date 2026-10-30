@@ -15,9 +15,15 @@ medir() {
         code=$(curl -s -m 60 -o /tmp/qa-dis-1.body -w '%{http_code}' "$2")
     fi
     t=$(( $(ahora_ms) - t0 ))
-    local traza="no"
+    local traza="no" contenido="datos"
     grep -qiE 'Exception|at [a-z]+\.[a-z]+\.' /tmp/qa-dis-1.body && traza="SÍ"
-    printf "   %-28s HTTP %s en %5d ms | stack trace visible: %s\n" "$1" "$code" "$t" "$traza"
+    # La JSF responde 200 también cuando muestra el error: se mira el contenido, no solo el código
+    if grep -q 'No se pudo' /tmp/qa-dis-1.body || grep -q '"code":"' /tmp/qa-dis-1.body; then
+        contenido="error controlado"
+        code="${code}-error"
+    fi
+    printf "   %-28s HTTP %-9s en %5d ms | muestra: %-16s | stack trace visible: %s\n" \
+        "$1" "$code" "$t" "$contenido" "$traza"
     echo "$t $code $traza" >> /tmp/qa-dis-1.res
 }
 
