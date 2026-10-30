@@ -8,6 +8,7 @@ import co.edu.javeriana.recursos.contracts.dto.ResourceRequestView;
 import co.edu.javeriana.recursos.contracts.exception.AlreadyAttendedException;
 import co.edu.javeriana.recursos.contracts.exception.BusinessException;
 import co.edu.javeriana.recursos.contracts.exception.BusinessValidationException;
+import co.edu.javeriana.recursos.contracts.exception.ConcurrentUpdateException;
 import co.edu.javeriana.recursos.contracts.exception.RequestNotFoundException;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +33,7 @@ class ContractsSerializationTest {
         var view = new ResourceRequestView(1L, "Inundacion en Mocoa", "Agua", 100,
                 Priority.ALTA, RequestStatus.PENDIENTE);
         var data = new ResourceRequestData(1L, "Inundacion en Mocoa", "Agua", 100,
-                Priority.ALTA, RequestStatus.ATENDIDA);
+                Priority.ALTA, RequestStatus.ATENDIDA, 3L);
 
         assertEquals(command, roundTrip(command));
         assertEquals(view, roundTrip(view));
@@ -45,6 +46,7 @@ class ContractsSerializationTest {
                 "VALIDATION_ERROR");
         assertSameError(new RequestNotFoundException(7L), "REQUEST_NOT_FOUND");
         assertSameError(new AlreadyAttendedException(7L), "ALREADY_ATTENDED");
+        assertSameError(new ConcurrentUpdateException(7L), "CONCURRENT_UPDATE");
     }
 
     @Test

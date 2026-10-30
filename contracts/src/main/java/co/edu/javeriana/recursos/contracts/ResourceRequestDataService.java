@@ -19,7 +19,11 @@ import java.util.List;
  *
  * <ul>
  *   <li>{@link #save}: si el id es {@code null} crea la solicitud y asigna id; si no,
- *       reemplaza la almacenada. Devuelve lo que quedó guardado.</li>
+ *       reemplaza la almacenada. Devuelve lo que quedó guardado (con su nueva versión).</li>
+ *   <li>Bloqueo optimista (D-16): para actualizar hay que enviar la {@code version} que
+ *       se leyó (basta con modificar y reenviar el DTO que devolvió {@link #findById}).
+ *       Si la fila cambió entretanto, lanza
+ *       {@link co.edu.javeriana.recursos.contracts.exception.ConcurrentUpdateException}.</li>
  *   <li>{@link #findAll}: ordenadas por id ascendente.</li>
  *   <li>No contiene reglas de negocio ni filtra por estado.</li>
  * </ul>

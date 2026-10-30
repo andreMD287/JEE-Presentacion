@@ -2,9 +2,11 @@ package co.edu.javeriana.recursos.data.ejb;
 
 import co.edu.javeriana.recursos.contracts.ResourceRequestDataService;
 import co.edu.javeriana.recursos.contracts.dto.ResourceRequestData;
+import co.edu.javeriana.recursos.contracts.exception.ConcurrentUpdateException;
 import co.edu.javeriana.recursos.data.entity.ResourceRequestEntity;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceContext;
 
 import java.util.List;
@@ -34,11 +36,26 @@ public class ResourceRequestDataServiceBean implements ResourceRequestDataServic
             em.flush(); // asigna el id generado por la base de datos
             return toData(entity);
         }
+        if (request.getVersion() == null) {
+            throw new IllegalArgumentException("Para actualizar la solicitud " + request.getId()
+                    + " hay que enviar la versión leída (bloqueo optimista)");
+        }
         ResourceRequestEntity entity = em.find(ResourceRequestEntity.class, request.getId());
         if (entity == null) {
             throw new IllegalArgumentException("No existe la solicitud con id " + request.getId());
         }
+        // Otra transacción ya confirmó un cambio después de que el cliente leyó la fila
+        if (request.getVersion() != entity.getVersion()) {
+            throw new ConcurrentUpdateException(request.getId());
+        }
         copy(request, entity);
+        try {
+            // Dos transacciones que leyeron la misma versión pasan el chequeo anterior al tiempo;
+            // el UPDATE ... WHERE version = ? de la segunda no afecta filas y Hibernate lo detecta aquí
+            em.flush();
+        } catch (OptimisticLockException e) {
+            throw new ConcurrentUpdateException(request.getId());
+        }
         return toData(entity);
     }
 
@@ -70,6 +87,6 @@ public class ResourceRequestDataServiceBean implements ResourceRequestDataServic
 
     static ResourceRequestData toData(ResourceRequestEntity e) {
         return new ResourceRequestData(e.getId(), e.getDisasterDescription(), e.getResourceType(),
-                e.getQuantity(), e.getPriority(), e.getStatus());
+                e.getQuantity(), e.getPriority(), e.getStatus(), e.getVersion());
     }
 }

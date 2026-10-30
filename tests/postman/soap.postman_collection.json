@@ -109,6 +109,88 @@
       }
     },
     {
+      "name": "RF-1 Regla: prioridad inválida",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const xml = pm.response.text();",
+              "const all = tag => [...xml.matchAll(new RegExp(\"<(?:\\\\w+:)?\" + tag + \">([^<]*)</(?:\\\\w+:)?\" + tag + \">\", \"g\"))].map(m => m[1]);",
+              "const one = tag => all(tag)[0];",
+              "",
+              "pm.test(\"SOAP Fault (HTTP 500)\", () => {",
+              "  pm.response.to.have.status(500);",
+              "  pm.expect(xml).to.match(/<(\\w+:)?Fault>/);",
+              "});",
+              "pm.test(\"código VALIDATION_ERROR en el detail\", () => pm.expect(one(\"code\")).to.eql(\"VALIDATION_ERROR\"));",
+              "pm.test(\"mensaje de negocio\", () => pm.expect(one(\"message\")).to.eql(\"La prioridad debe ser BAJA, MEDIA o ALTA\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/xml; charset=utf-8"
+          },
+          {
+            "key": "SOAPAction",
+            "value": "\"\""
+          }
+        ],
+        "url": "{{soapUrl}}",
+        "body": {
+          "mode": "raw",
+          "raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:r=\"http://recursos.javeriana.edu.co/soap\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <r:registerRequest>\n      <request>\n        <disasterDescription>Sismo en Pasto</disasterDescription>\n        <resourceType>Medicamentos</resourceType>\n        <quantity>10</quantity>\n        <priority>URGENTE</priority>\n      </request>\n    </r:registerRequest>\n  </soapenv:Body>\n</soapenv:Envelope>"
+        }
+      }
+    },
+    {
+      "name": "RF-1 Regla: prioridad vacía",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const xml = pm.response.text();",
+              "const all = tag => [...xml.matchAll(new RegExp(\"<(?:\\\\w+:)?\" + tag + \">([^<]*)</(?:\\\\w+:)?\" + tag + \">\", \"g\"))].map(m => m[1]);",
+              "const one = tag => all(tag)[0];",
+              "",
+              "pm.test(\"SOAP Fault (HTTP 500)\", () => {",
+              "  pm.response.to.have.status(500);",
+              "  pm.expect(xml).to.match(/<(\\w+:)?Fault>/);",
+              "});",
+              "pm.test(\"código VALIDATION_ERROR en el detail\", () => pm.expect(one(\"code\")).to.eql(\"VALIDATION_ERROR\"));",
+              "pm.test(\"mensaje de negocio\", () => pm.expect(one(\"message\")).to.eql(\"La prioridad es obligatoria\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "text/xml; charset=utf-8"
+          },
+          {
+            "key": "SOAPAction",
+            "value": "\"\""
+          }
+        ],
+        "url": "{{soapUrl}}",
+        "body": {
+          "mode": "raw",
+          "raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:r=\"http://recursos.javeriana.edu.co/soap\">\n  <soapenv:Header/>\n  <soapenv:Body>\n    <r:registerRequest>\n      <request>\n        <disasterDescription>Sismo en Pasto</disasterDescription>\n        <resourceType>Medicamentos</resourceType>\n        <quantity>10</quantity>\n        <priority></priority>\n      </request>\n    </r:registerRequest>\n  </soapenv:Body>\n</soapenv:Envelope>"
+        }
+      }
+    },
+    {
       "name": "RF-2 listRequests",
       "event": [
         {

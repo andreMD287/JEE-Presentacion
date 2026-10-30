@@ -10,6 +10,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 
 /**
  * Fila de la tabla {@code resource_request}.
@@ -42,6 +43,11 @@ public class ResourceRequestEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private RequestStatus status;
+
+    /** Bloqueo optimista (D-16): Hibernate actualiza con "WHERE id = ? AND version = ?". */
+    @Version
+    @Column(nullable = false)
+    private long version;
 
     public Long getId() {
         return id;
@@ -89,5 +95,13 @@ public class ResourceRequestEntity {
 
     public void setStatus(RequestStatus status) {
         this.status = status;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public void setVersion(long version) {
+        this.version = version;
     }
 }

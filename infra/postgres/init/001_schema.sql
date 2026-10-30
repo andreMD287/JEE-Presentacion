@@ -8,5 +8,6 @@ CREATE TABLE IF NOT EXISTS resource_request (
     resource_type        VARCHAR(200) NOT NULL,
     quantity             INTEGER      NOT NULL,
     priority             VARCHAR(10)  NOT NULL,
-    status               VARCHAR(10)  NOT NULL
+    status               VARCHAR(10)  NOT NULL,
+    version              BIGINT       NOT NULL DEFAULT 0  -- bloqueo optimista (D-16)
 );

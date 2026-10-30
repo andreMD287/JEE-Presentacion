@@ -188,6 +188,41 @@
       }
     },
     {
+      "name": "RF-1 Regla: prioridad vacía",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"código VALIDATION_ERROR\", () => pm.expect(pm.response.json().code).to.eql(\"VALIDATION_ERROR\"));",
+              "pm.test(\"cuerpo de error del T2\", () => pm.expect(pm.response.json()).to.have.keys(\"code\", \"message\", \"timestamp\"));",
+              "pm.test(\"mensaje de negocio\", () => pm.expect(pm.response.json().message).to.eql(\"La prioridad es obligatoria\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "apikey",
+            "value": "{{apiKey}}"
+          }
+        ],
+        "url": "{{baseUrl}}/requests",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"disasterDescription\": \"Deslizamiento\",\n  \"resourceType\": \"Mantas\",\n  \"quantity\": 5,\n  \"priority\": null\n}"
+        }
+      }
+    },
+    {
       "name": "RF-2 Consultar todas",
       "event": [
         {

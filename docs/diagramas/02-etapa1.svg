@@ -56,7 +56,7 @@
 <text x="696.0" y="134" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«@Stateless · NOT_SUPPORTED»</text>
 <text x="696.0" y="152" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">ResourceRequestServiceBean</text>
 <text x="696.0" y="167" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">implementa ResourceRequestService</text>
-<text x="696.0" y="182" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">reglas RN-1..RN-5 (código del T2)</text>
+<text x="696.0" y="182" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">reglas RN-1..RN-6 (código del T2)</text>
 <rect x="560" y="225" width="290" height="67" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
 <rect x="828" y="232" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
 <rect x="824" y="235" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
