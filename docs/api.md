@@ -124,11 +124,12 @@ docker run --rm --network jee-presentacion_default -v "$PWD/tests/postman:/etc/n
 
 | Colección | Qué prueba | Entorno |
 |---|---|---|
-| `rest.postman_collection.json` | RF-1..RF-5 y las 3 reglas de error por REST (13 peticiones) | `gateway` (vía Kong) o `directo` (services) |
-| `soap.postman_collection.json` | WSDL, RF-1..RF-5 y SOAP Faults (10 peticiones) | `gateway` o `directo` (SOAP siempre va directo) |
+| `rest.postman_collection.json` | RF-1..RF-5 y sus reglas de error por REST, incluida la prioridad (RN-6) (14 peticiones) | `gateway` (vía Kong) o `directo` (services) |
+| `soap.postman_collection.json` | WSDL, RF-1..RF-5 y SOAP Faults, incluida la prioridad (RN-6) (12 peticiones) | `gateway` o `directo` (SOAP siempre va directo) |
 | `gateway.postman_collection.json` | QA-SEG-1: 401 sin clave o con clave inválida; `X-Correlation-ID` y límite | `gateway` |
 
 `local.postman_environment.json` sirve para abrir las colecciones en Postman desde el equipo (`localhost`).
+Las colecciones y entornos se generan con `python tests/postman/generar.py`; para cambiar un caso se edita ese script.
 
 ## 6. Despliegue
 
