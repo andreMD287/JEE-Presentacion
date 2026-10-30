@@ -153,7 +153,7 @@ cambian respecto de la etapa ①.
 | Seguridad | Usuario de aplicación de WildFly en cada salto EJB | Igual; los servicios quedan expuestos sin control propio | API key y límite de demanda en el gateway; SOAP sin esos controles (R-1) |
 | Manejo de fallos | Timeout de invocación EJB (D-14) | Ídem + traducción a 5xx/Fault | Ídem + 429 ante picos |
 | Complejidad operativa | 3 servidores + BD | 4 servidores + BD | 5 contenedores + BD; un componente más que operar |
-| Latencia RF-2 (p50/p95) | Ver §12 (QA-REN-1) | Ver §12 | Ver §12 |
+| Latencia RF-2 (p50/p95, QA-REN-1) | 26,6 / 38,1 ms (página JSF completa) | 18,4 / 33,2 ms | 19,0 / 31,4 ms |
 
 ---
 
@@ -187,8 +187,8 @@ transiciones.
 - **Fachada sin reglas.** `ResourceRequestResource` y `ResourceRequestSoapService` solo traducen: no validan cantidades
   ni estados. Los errores de negocio se traducen por `code`: REST a 400/404/409 con el cuerpo del T2
   `{code, message, timestamp}`, SOAP a un Fault con `<code>` y `<message>` en el `detail` (contrato en `docs/api.md`).
-- **Strategy en la presentación (D-8).** Los beans JSF dependen de `RequestGateway`. Al arrancar se elige
-  `EjbRequestGateway` o `RestRequestGateway` según `BACKEND_MODE`; las páginas no cambian.
+- **Strategy en la presentación (D-8).** `ResourceRequestBean` depende de la interfaz `RequestClient`. Al arrancar,
+  `RequestClientSelector` elige `EjbRequestClient` o `RestRequestClient` según `BACKEND_MODE`; la página no cambia.
 
 ---
 
@@ -336,7 +336,7 @@ Cada decisión sigue la cadena **driver → alternativas → trade-off → decis
 
 | Escenario | Tácticas (Bass) | Dónde |
 |---|---|---|
-| QA-MOD-1 | Encapsular; usar un intermediario; restringir dependencias; diferir el enlace (configuración en el despliegue) | `RequestGateway` + `BACKEND_MODE`; `contracts`; puerto/adaptador |
+| QA-MOD-1 | Encapsular; usar un intermediario; restringir dependencias; diferir el enlace (configuración en el despliegue) | `RequestClient` + `BACKEND_MODE`; `contracts`; puerto/adaptador |
 | QA-INT-1 | Adherirse a estándares (HTTP/JSON, SOAP/WSDL); adaptar la interfaz (tailor interface); usar un intermediario | `services` |
 | QA-SEG-1 | Autenticar actores; limitar el acceso; limitar la exposición | Kong `key-auth`; usuario de aplicación EJB; `logic` y `data` sin puertos |
 | QA-DIS-1 | Detección de excepciones; timeout; manejo de excepciones; reintroducción sin reinicio de las demás capas; precalentamiento antes de reintroducir el componente | `RemoteEjbLocator` (timeout); manejo en JSF/REST/SOAP; `DataWarmup` y calentamiento de cada cliente EJB (D-17); healthchecks |
@@ -378,8 +378,8 @@ Cada decisión sigue la cadena **driver → alternativas → trade-off → decis
 
 | Driver | Escenario | Decisiones | Elementos | Vista | Evidencia |
 |---|---|---|---|---|---|
-| CON-1, QA-MOD-1 | QA-MOD-1 | D-3, D-4, D-8 | `RequestGateway`, puerto/adaptador, `contracts` | Lógica, desarrollo | `scripts/qa-mod-1.sh` + `git diff` |
-| CON-2 | QA-INT-1 | D-5, D-13 | `services` (JAX-RS, JAX-WS) | Lógica, procesos 6.2 y 6.3 (fig. 8 y 9) | Newman REST y SOAP |
+| CON-1, QA-MOD-1 | QA-MOD-1 | D-3, D-4, D-8 | `RequestClient`, puerto/adaptador, `contracts` | Lógica, desarrollo | `scripts/qa-mod-1.sh` + `git diff` |
+| CON-2 | QA-INT-1 | D-5, D-13 | `services` (JAX-RS, JAX-WS) | Lógica, procesos 6.2 y 6.3 (fig. 8 y 9) | `scripts/qa-int-1.sh` (Newman REST y SOAP) |
 | CON-2 | QA-SEG-1 | D-6, D-10, D-15 | `gateway` (`key-auth`) | Física | `scripts/qa-seg-1.sh` |
 | Operación continua | QA-DIS-1 | D-14, D-11, D-17 | `RemoteEjbLocator`, healthchecks | Procesos, física | `scripts/qa-dis-1.sh`; `docs/evidencias/spikes.md`; `docs/evidencias/calentamiento.md` |
 | Picos de demanda | QA-DIS-2 | D-6 | `gateway` (`rate-limiting`) | Física | `scripts/qa-dis-2.sh` |
@@ -390,8 +390,27 @@ Cada decisión sigue la cadena **driver → alternativas → trade-off → decis
 
 ## 12. Resultados de pruebas
 
-Las cifras de esta sección son las que imprimieron las pruebas y los scripts; lo que aún no se ha ejecutado se marca
-como pendiente. Las salidas completas están en `docs/evidencias/`.
+Las cifras de esta sección son las que imprimieron las pruebas y los scripts. Las corridas oficiales se hicieron el
+2026-10-29 sobre el sistema completo (commit `050c633`, seis contenedores sanos); las salidas completas están en
+`docs/evidencias/qa/` y las de los spikes y el precalentamiento en `docs/evidencias/`.
+
+**Escenarios de calidad (corrida oficial)**
+
+| Escenario | Script | Resultado | Cumple |
+|---|---|---|---|
+| QA-INT-1 | `scripts/qa-int-1.sh` | Newman REST vía Kong 47/47, REST directo 47/47 y SOAP 35/35 aserciones | Sí |
+| QA-SEG-1 | `scripts/qa-seg-1.sh` | 401 sin clave y con clave inválida; solo la petición con clave llegó a `services` (por su `X-Correlation-ID`); Newman 7/7 | Sí |
+| QA-DIS-2 | `scripts/qa-dis-2.sh` | Ráfaga de 50 en 892 ms: 32 atendidas, 18 rechazadas con 429; `services` respondió 200 justo después | Sí |
+| QA-DIS-1 | `scripts/qa-dis-1.sh` | Con `data` detenido: JSF y REST responden en ≤ 153 ms con mensaje controlado y sin trazas; al reiniciar solo `data`, los dos clientes vuelven a 200 sin reiniciar `logic`, `services` ni `presentation` | Sí |
+| QA-MOD-1 | `scripts/qa-mod-1.sh` | Misma imagen de `presentation` en `ejb` → `rest` → `ejb`; en `rest` la pantalla llega a `services` por Kong (2 peticiones en su log), en `ejb` ninguna; 0 cambios en `logic` y `data` | Sí |
+| QA-REN-1 | `scripts/medir-latencia.sh` | 100 consultas RF-2 por camino. ① JSF→EJB: p50 26,6 ms, p95 38,1 ms (incluye generar el HTML). ② REST directo: p50 18,4 ms, p95 33,2 ms. ③ REST vía Kong: p50 19,0 ms, p95 31,4 ms | Medido |
+| RN-5 concurrente | `scripts/rn-5-concurrencia.sh` | 10 atenciones simultáneas de la misma solicitud: 1 × 200 y 9 × 409 `ALREADY_ATTENDED`; queda `ATENDIDA` | Sí |
+
+Lectura de QA-REN-1: el gateway agrega menos de 1 ms en la mediana (② vs ③), así que su costo es despreciable frente
+a lo que aporta (QA-SEG-1, QA-DIS-2). La diferencia de ① se debe sobre todo a que mide la página completa y no solo
+los datos. Para este dominio, de operación humana, ninguna cifra es un problema (R-2).
+
+**Pruebas previas y unitarias**
 
 | Prueba | Fecha | Resultado |
 |---|---|---|
@@ -399,12 +418,7 @@ como pendiente. Las salidas completas están en `docs/evidencias/`.
 | Spike S-2: `logic` → `data` por EJB remoto; DTO y excepciones | 2026-10-28 | Cumple; `REQUIRED` propaga la transacción y `NOT_SUPPORTED` no (D-11) |
 | Capa de Datos real (JPA + PostgreSQL) con la cadena del spike | 2026-10-28 | Cumple: RF-1..RF-5, tres errores de negocio y filas persistidas |
 | Timeout EJB ante caída de `data` (antecedente de QA-DIS-1) | 2026-10-28 | Sin timeout: 135 s; con `invocation.timeout=10000`: 10 s; recuperación sin reiniciar otras capas |
-| Pruebas unitarias `contracts` y `data` | 2026-10-28 | 14/14 en verde |
 | Bloqueo optimista en Datos (D-16): pruebas unitarias y despliegue de `data.war` con la columna `version` | 2026-10-29 | 17/17 en verde; Hibernate valida el esquema al desplegar |
 | Primera llamada tras reiniciar `data` (D-17), cliente de larga vida | 2026-10-29 | Sin precalentamiento: 718–813 ms; con precalentamiento: 29–88 ms; 0 timeouts. Pruebas `contracts` + `data`: 19/19 |
-| RN-5 con 10 atenciones simultáneas (`scripts/rn-5-concurrencia.sh`) | — | Pendiente: requiere `logic` y `services` |
-| QA-SEG-1 (gateway, `services` aún sin REST) | 2026-10-28 | Cumple: 401 sin clave y con clave inválida; 0 peticiones rechazadas en el log de `services`; Newman 7/7 |
-| QA-DIS-2 (gateway, `services` aún sin REST) | 2026-10-28 | Cumple: ráfaga de 50 → 27 atendidas, 23 rechazadas con 429; `services` siguió respondiendo |
-| Newman REST y SOAP (QA-INT-1) | — | Pendiente: requiere `services` |
-| QA-MOD-1, QA-DIS-1, QA-REN-1 de punta a punta | — | Pendiente: requieren `logic`, `services` y `presentation` |
-| Pruebas unitarias `logic` y `services` | — | Pendiente |
+| Primera petición por Kong recién reiniciado | 2026-10-29 | 4,1 s por la consulta DNS SRV; con `KONG_DNS_ORDER=LAST,A,CNAME`: 0,05–0,66 s (`docs/evidencias/calentamiento.md`) |
+| Pruebas unitarias de los cinco módulos (`mvn clean test`) | 2026-10-29 | 89/89 en verde: `contracts` 7, `data` 12, `logic` 35, `services` 21, `presentation-jsf` 14 |

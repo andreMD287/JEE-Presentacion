@@ -12,10 +12,12 @@ id=$(sed -E 's/.*"id":([0-9]+).*/\1/' <<<"$creada")
 echo "Solicitud creada: id=$id"
 
 tmp=$(mktemp -d)
+pids=()
 for i in $(seq 1 "$N"); do
     curl -s -o "$tmp/$i.json" -w '%{http_code}\n' -X PUT "$SERVICES/requests/$id/attend" >"$tmp/$i.code" &
+    pids+=($!)
 done
-wait
+wait "${pids[@]}"   # solo las peticiones: un wait sin argumentos también esperaría al tee de la evidencia
 
 ok=$(cat "$tmp"/*.code | grep -c '^200$' || true)
 conflicto=$(cat "$tmp"/*.code | grep -c '^409$' || true)

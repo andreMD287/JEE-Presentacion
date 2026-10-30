@@ -1,0 +1,11 @@
+== QA-MOD-1 | 2026-10-29 22:25:21 | 050c633
+   evidencia: docs/evidencias/qa/QA-MOD-1-20261029-222521.txt
+1) Etapa 1: presentation -> logic por EJB remoto
+   BACKEND_MODE=ejb  | JSF HTTP 200 | peticiones en el log de services: 0 | imagen 254f780eff03
+2) Etapa 3: presentation -> gateway -> services (REST), sin recompilar
+   BACKEND_MODE=rest | JSF HTTP 200 | peticiones en el log de services: 2 | imagen 254f780eff03
+3) Se vuelve al modo por defecto
+   BACKEND_MODE=ejb  | JSF HTTP 200 | peticiones en el log de services: 0 | imagen 254f780eff03
+Archivos modificados en logic y data para hacer el cambio: 0
+La imagen de presentation es la misma en los tres pasos
+RESULTADO: CUMPLE - cambio de etapa solo por BACKEND_MODE: misma imagen, 0 cambios en logic y data, camino REST verificado

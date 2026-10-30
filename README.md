@@ -13,8 +13,8 @@ pide tres esquemas y se implementan como **tres etapas del mismo sistema**:
 
 La pantalla JSF cambia de la etapa ① a la ③ solo con la variable `BACKEND_MODE=ejb|rest`, sin recompilar.
 
-> Estado: Datos, infraestructura, gateway, pruebas y documentación están listos. Lógica, Servicios y JSF están en
-> desarrollo en la rama `andres`. Los puntos marcados como *pendiente* se completan al integrarla.
+> Estado: sistema completo. Las 89 pruebas unitarias y los seis escenarios de calidad pasan; resultados en
+> `docs/arquitectura.md` §12.
 
 ---
 
@@ -157,6 +157,7 @@ Cada script imprime el resultado (`CUMPLE` o `NO CUMPLE`) y guarda la salida en 
 
 | Script | Escenario | Qué mide |
 |---|---|---|
+| `scripts/qa-int-1.sh` | QA-INT-1 Interoperabilidad | Newman REST (vía Kong y directo) y SOAP: 100 % de aserciones en verde |
 | `scripts/qa-seg-1.sh` | QA-SEG-1 Seguridad | Sin API key la petición se rechaza en Kong y no llega a `services` |
 | `scripts/qa-dis-2.sh` | QA-DIS-2 Picos de demanda | Una ráfaga de 50 peticiones recibe 429 por encima de 20 por segundo |
 | `scripts/qa-dis-1.sh` | QA-DIS-1 Disponibilidad | Con `data` caído, error controlado en ≤ 5 s; recuperación sin reiniciar las otras capas |
@@ -164,8 +165,7 @@ Cada script imprime el resultado (`CUMPLE` o `NO CUMPLE`) y guarda la salida en 
 | `scripts/medir-latencia.sh` | QA-REN-1 Rendimiento | p50 y p95 de cada camino (①, ② y ③) |
 | `scripts/rn-5-concurrencia.sh` | RN-5 con concurrencia | 10 atenciones simultáneas: una gana y las demás reciben 409 |
 
-Resultados vigentes en `docs/arquitectura.md` §12. *Pendiente:* QA-DIS-1, QA-MOD-1, QA-REN-1 y RN-5 concurrente
-requieren la Lógica, los Servicios y la JSF integrados.
+Resultados vigentes en `docs/arquitectura.md` §12: todos los escenarios cumplen.
 
 ### 5.3 Recorrido manual
 
@@ -210,7 +210,7 @@ contracts/          interfaces @Remote, DTO serializables, excepciones de negoci
 data/               entidad JPA, EJB de Datos (JTA local), precalentamiento
 logic/              reglas de negocio, puerto y adaptador remoto hacia Datos
 services/           recurso JAX-RS, endpoint JAX-WS y traducción de errores
-presentation-jsf/   vistas JSF, bean CDI y RequestGateway (modo ejb o rest)
+presentation-jsf/   vistas JSF, bean CDI y RequestClient (modo ejb o rest)
 infra/              Dockerfiles, scripts CLI de WildFly, esquema SQL, configuración de Kong
 tests/postman/      colecciones y entornos de Newman (generadas por generar.py)
 scripts/            escenarios de calidad y empaquetado de la entrega
@@ -298,6 +298,7 @@ producción también se enrutaría SOAP por él.
 | `--wait` se demora | Los WildFly tardan entre 20 y 40 s en desplegar y precalentarse: `docker compose ps` y `docker compose logs -f <servicio>` |
 | `data` no despliega: falta la columna `version` | El volumen de PostgreSQL tiene el esquema anterior. Sin perder datos: `docker compose exec postgres psql -U recursos -d recursos -c "ALTER TABLE resource_request ADD COLUMN version BIGINT NOT NULL DEFAULT 0"`. Si los datos no importan: `docker compose down -v` |
 | JSF o REST muestran "servicio no disponible" | Alguna capa está detenida o arrancando; se recupera sola cuando vuelve a estar sana, sin reiniciar las demás |
+| Advertencias `config.redis_* is deprecated` en el log de Kong | Inofensivas: no se usa Redis (`policy: local`); Kong 3.9 las imprime por sus valores por defecto |
 | 429 en el gateway | Se superaron 20 peticiones por segundo; espera un segundo |
 | Los scripts fallan en Windows con rutas | Ejecútalos desde Git Bash, no desde PowerShell o CMD |
 | El primer build es muy lento | Es normal: descarga las imágenes y las dependencias de Maven. Los siguientes usan caché |

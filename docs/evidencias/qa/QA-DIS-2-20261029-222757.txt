@@ -1,0 +1,8 @@
+== QA-DIS-2 | 2026-10-29 22:27:57 | 050c633
+   evidencia: docs/evidencias/qa/QA-DIS-2-20261029-222757.txt
+Ráfaga de 50 peticiones en 892 ms. Respuestas por código HTTP:
+        32 200
+        18 429
+Atendidas por services: 32 | rechazadas por Kong (429): 18
+services responde directamente justo después: HTTP 200
+RESULTADO: CUMPLE - Kong corta la ráfaga con 429 y services sigue disponible

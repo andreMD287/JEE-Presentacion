@@ -1,0 +1,29 @@
+== QA-SEG-1 | 2026-10-29 22:15:22 | 050c633
+   evidencia: docs/evidencias/qa/QA-SEG-1-20261029-221522.txt
+Sin API key       -> HTTP 401
+API key inválida  -> HTTP 401
+Con API key       -> HTTP 200
+Líneas nuevas en el log de acceso de services: 1
+Correlation-ID que llegaron a services: qa-seg-1-1793330122-con 
+RESULTADO: CUMPLE - las peticiones sin clave o con clave inválida se rechazan en Kong (401) y no llegan a services
+
+Colección de Newman del gateway:
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │                3 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │                3 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │                7 │                0 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 209ms                                     │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 859B (approx)                            │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 38ms [min: 6ms, max: 82ms, s.d.: 31ms] │
+└───────────────────────────────────────────────────────────────┘

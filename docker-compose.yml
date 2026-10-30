@@ -104,6 +104,9 @@ services:
       KONG_ADMIN_LISTEN: 127.0.0.1:8001   # admin solo dentro del contenedor
       KONG_PROXY_ACCESS_LOG: /dev/stdout
       KONG_PROXY_ERROR_LOG: /dev/stderr
+      # Sin SRV: el DNS de Docker no responde SRV para nombres de contenedor y la primera petición
+      # esperaba ~4 s por el timeout antes de pedir el registro A (docs/evidencias/calentamiento.md)
+      KONG_DNS_ORDER: LAST,A,CNAME
     volumes:
       - ./infra/kong/kong.yml:/kong/kong.yml:ro
     ports:

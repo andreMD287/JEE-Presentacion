@@ -15,7 +15,7 @@ probar_modo() {
     local modo="$1" desde lineas codigo
     BACKEND_MODE="$modo" compose up -d --no-build --no-deps presentation >/dev/null 2>&1
     esperar_sano presentation 180
-    desde=$(date -u +%Y-%m-%dT%H:%M:%S)
+    desde=$(date -u +%Y-%m-%dT%H:%M:%SZ)   # con Z: sin ella Docker la toma como hora local
     sleep 1
     codigo=$(curl -s -m 30 -o /dev/null -w '%{http_code}' "$JSF/")
     sleep 1

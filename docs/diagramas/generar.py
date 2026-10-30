@@ -233,11 +233,11 @@ def etapa1():
     s.actor(55, 110, ["Operador"])
     # presentation
     s.node(120, 60, 290, 370, "presentation", "Tomcat 10.1 · JSF 4 + Weld 5")
-    s.component(140, 110, 250, "Páginas Facelets", lines=["lista · registro · detalle"])            # 110-162
-    s.component(140, 205, 250, "RequestsBean", "CDI @Named", ["muestra mensajes de negocio y de falla"])  # 205-272
-    s.component(140, 315, 250, "EjbRequestGateway", "estrategia · BACKEND_MODE=ejb",
+    s.component(140, 110, 250, "index.xhtml", "Facelets", ["registro · tabla · búsqueda · pendientes"])            # 110-177
+    s.component(140, 205, 250, "ResourceRequestBean", "CDI @Named · @ViewScoped", ["muestra mensajes de negocio y de falla"])  # 205-272
+    s.component(140, 315, 250, "EjbRequestClient", "estrategia · BACKEND_MODE=ejb",
                 ["usa RemoteEjbLocator"])                                                          # 315-382
-    s.arrow([(265, 162), (265, 205)])
+    s.arrow([(265, 177), (265, 205)])
     s.arrow([(265, 272), (265, 315)])
     s.arrow([(80, 142), (140, 142)])
     s.label(108, 128, "HTTP")
@@ -280,7 +280,7 @@ def etapas23():
     s = Svg(1460, 670)
     # clientes
     s.box(30, 70, 200, 72, "Cliente REST", ["Postman · Newman · apps"], stereo="sistema externo")
-    s.box(30, 200, 200, 72, "presentation (JSF)", ["RestRequestGateway"], stereo="BACKEND_MODE=rest")
+    s.box(30, 200, 200, 72, "presentation (JSF)", ["RestRequestClient"], stereo="BACKEND_MODE=rest")
     s.box(30, 470, 200, 72, "Cliente SOAP", ["SoapUI · Newman · heredados"], stereo="sistema externo")
     s.badge(218, 84, "②")
     s.badge(218, 214, "③")
@@ -299,7 +299,7 @@ def etapas23():
     # services
     s.node(690, 50, 320, 520, "services", "WildFly 38 · fachada sin reglas", badge="②")
     s.component(710, 105, 280, "ResourceRequestResource", "JAX-RS", ["/services/api/v1/requests"])  # 105-172
-    s.component(710, 205, 280, "ExceptionMappers", "JAX-RS @Provider",
+    s.component(710, 205, 280, "ApiExceptionMapper", "JAX-RS @Provider",
                 ["BusinessException.code → 400 / 404 / 409"])                                       # 205-272
     s.component(710, 365, 280, "BusinessFault", "@WebFault", ["SOAP Fault con code y message"])     # 365-432
     s.component(710, 465, 280, "ResourceRequestSoapService", "JAX-WS", ["WSDL · 5 operaciones"])     # 465-532
@@ -337,17 +337,17 @@ def logica():
     s = Svg(1360, 800)
     # presentation-jsf
     s.package(30, 50, 410, 255, "presentation-jsf")
-    s.classbox(45, 80, 180, "RequestsBean", "CDI @Named", ["+ registrar()", "+ atender(id)", "+ getSolicitudes()"])
-    s.classbox(245, 80, 180, "RequestGateway", "interface", ["register · findAll · findById", "attend · findPending"],
+    s.classbox(45, 80, 180, "ResourceRequestBean", "CDI @ViewScoped", ["+ register()", "+ attend(id)", "+ search()"])
+    s.classbox(245, 80, 180, "RequestClient", "interface", ["register · findAll · findById", "attend · findPending"],
                italic=True)                                                                         # 80-164
-    s.classbox(45, 210, 180, "RestRequestGateway", "modo rest", ["HTTP + apikey vía Kong"])         # 210-279
-    s.classbox(245, 210, 180, "EjbRequestGateway", "modo ejb", ["EJB remoto a logic"])             # 210-279
+    s.classbox(45, 210, 180, "RestRequestClient", "modo rest", ["HTTP + apikey vía Kong"])         # 210-279
+    s.classbox(245, 210, 180, "EjbRequestClient", "modo ejb", ["EJB remoto a logic"])             # 210-279
     s.arrow([(225, 112), (245, 112)], "dep")
     s.arrow([(135, 210), (135, 190), (335, 190), (335, 164)], "real")
     s.arrow([(335, 210), (335, 190)], "none", dashed=True)
     # services
     s.package(30, 355, 410, 235, "services")
-    s.classbox(45, 385, 180, "ExceptionMappers", "JAX-RS @Provider", ["code → 400 / 404 / 409"])
+    s.classbox(45, 385, 180, "ApiExceptionMapper", "JAX-RS @Provider", ["code → 400 / 404 / 409"])
     s.classbox(245, 385, 180, "ResourceRequestResource", "JAX-RS", ["/api/v1/requests"])           # 385-454
     s.classbox(45, 490, 180, "BusinessFault", "@WebFault", ["code · message"])
     s.classbox(245, 490, 180, "ResourceRequestSoapService", "JAX-WS", ["5 operaciones"])           # 490-559
@@ -409,10 +409,10 @@ def desarrollo():
     s = Svg(1220, 485)
     mods = [
         ("presentation-jsf", "recursos.war", "Tomcat · presentation",
-         ["beans CDI y páginas Facelets", "RequestGateway + 2 estrategias", "Faces 4.0.28 · Weld 5.1.7",
+         ["beans CDI y páginas Facelets", "RequestClient + 2 estrategias", "Faces 4.0.28 · Weld 5.1.7",
           "cliente EJB de WildFly 38.0.1"]),
         ("services", "services.war", "WildFly · services",
-         ["recurso JAX-RS + ExceptionMappers", "endpoint JAX-WS + BusinessFault"]),
+         ["recurso JAX-RS + ApiExceptionMapper", "endpoint JAX-WS + BusinessFault"]),
         ("logic", "logic.war", "WildFly · logic",
          ["ResourceRequestServiceBean (T2)", "puerto ResourceRequestRepository", "adaptador remoto",
           "dominio ResourceRequest"]),

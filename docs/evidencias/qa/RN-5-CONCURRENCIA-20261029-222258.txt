@@ -1,0 +1,7 @@
+== RN-5-CONCURRENCIA | 2026-10-29 22:22:58 | 050c633
+   evidencia: docs/evidencias/qa/RN-5-CONCURRENCIA-20261029-222258.txt
+Solicitud creada: id=8
+10 atenciones simultáneas -> 200: 1 | 409: 9 | otros: 0
+Códigos de error:       9 "code":"ALREADY_ATTENDED" 
+Estado final: "status":"ATENDIDA"
+RESULTADO: CUMPLE - una sola atención gana; las demás reciben 409 ALREADY_ATTENDED

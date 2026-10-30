@@ -19,27 +19,28 @@
 <rect x="120" y="60" width="290" height="370" fill="#f3f3f3" stroke="#1f1f1f" stroke-width="1.2"/>
 <text x="132" y="82" font-size="14" font-weight="bold" text-anchor="start" fill="#1f1f1f">presentation</text>
 <text x="132" y="99" font-size="11.5" font-weight="normal" text-anchor="start" fill="#555555">Tomcat 10.1 · JSF 4 + Weld 5</text>
-<rect x="140" y="110" width="250" height="52" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
+<rect x="140" y="110" width="250" height="67" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
 <rect x="368" y="117" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
 <rect x="364" y="120" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
 <rect x="364" y="126.5" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
-<text x="256.0" y="137" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">Páginas Facelets</text>
-<text x="256.0" y="152" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">lista · registro · detalle</text>
+<text x="256.0" y="134" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«Facelets»</text>
+<text x="256.0" y="152" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">index.xhtml</text>
+<text x="256.0" y="167" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">registro · tabla · búsqueda · pendientes</text>
 <rect x="140" y="205" width="250" height="67" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
 <rect x="368" y="212" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
 <rect x="364" y="215" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
 <rect x="364" y="221.5" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
-<text x="256.0" y="229" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«CDI @Named»</text>
-<text x="256.0" y="247" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">RequestsBean</text>
+<text x="256.0" y="229" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«CDI @Named · @ViewScoped»</text>
+<text x="256.0" y="247" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">ResourceRequestBean</text>
 <text x="256.0" y="262" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">muestra mensajes de negocio y de falla</text>
 <rect x="140" y="315" width="250" height="67" fill="white" stroke="#1f1f1f" stroke-width="1.1" rx="2"/>
 <rect x="368" y="322" width="14" height="16" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
 <rect x="364" y="325" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
 <rect x="364" y="331.5" width="8" height="3.5" fill="white" stroke="#1f1f1f" stroke-width="0.9"/>
 <text x="256.0" y="339" font-size="11" font-weight="normal" text-anchor="middle" fill="#555555">«estrategia · BACKEND_MODE=ejb»</text>
-<text x="256.0" y="357" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">EjbRequestGateway</text>
+<text x="256.0" y="357" font-size="13" font-weight="bold" text-anchor="middle" fill="#1f1f1f">EjbRequestClient</text>
 <text x="256.0" y="372" font-size="11.5" font-weight="normal" text-anchor="middle" fill="#555555">usa RemoteEjbLocator</text>
-<polyline points="265,162 265,205" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
+<polyline points="265,177 265,205" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
 <polyline points="265,272 265,315" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
 <polyline points="80,142 140,142" fill="none" stroke="#1f1f1f" stroke-width="1.4" marker-end="url(#call)"/>
 <rect x="90.1" y="117.8" width="35.8" height="20.5" fill="white" rx="3"/>

@@ -1,0 +1,10 @@
+== QA-REN-1 | 2026-10-29 22:29:33 | 050c633
+   evidencia: docs/evidencias/qa/QA-REN-1-20261029-222933.txt
+Solicitudes en la base: 8 | N=100 por camino (+10 de calentamiento)
+Etapa 1: JSF -> EJB (Tomcat -> logic -> data)
+   n=100  p50=26.6 ms  p95=38.1 ms  max=45.5 ms
+Etapa 2: REST directo a services
+   n=100  p50=18.4 ms  p95=33.2 ms  max=45.2 ms
+Etapa 3: REST vía Kong
+   n=100  p50=19.0 ms  p95=31.4 ms  max=66.1 ms
+Nota: el límite de Kong es 20 peticiones/s; las peticiones son secuenciales y no lo alcanzan.

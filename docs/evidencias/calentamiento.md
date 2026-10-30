@@ -45,3 +45,18 @@ En el log de `data`: `Calentamiento de data completo en 868–943 ms` durante el
   llamada de calentamiento al arrancar, de mejor esfuerzo, antes de declararse sano.
 - La sonda 1 sobrestima el costo del cliente: carga 116 jars desde una carpeta de Windows montada en el contenedor.
   En las imágenes reales los jars están dentro de la imagen.
+
+## Gateway: primera petición tras reiniciar Kong
+
+En la primera corrida oficial de QA-INT-1 (2026-10-29), una petición por el gateway tardó 5,5 s aunque `services` la
+atendió en 1,3 s. Al reiniciar solo `gateway` y medir con `curl`:
+
+| Configuración de Kong | 401 sin clave (no sale de Kong) | 1.ª petición con clave | 2.ª petición |
+|---|---|---|---|
+| Por defecto (`dns_order` con SRV primero) | 13–35 ms | 4,13 s y 4,05 s | 33–99 ms |
+| `KONG_DNS_ORDER=LAST,A,CNAME` | — | 0,07 s, 0,66 s y 0,05 s | 34–253 ms |
+
+Causa: Kong 3.x resuelve el upstream `services` consultando primero un registro SRV. El DNS interno de Docker no lo
+tiene, así que Kong espera un timeout antes de pedir el registro A. Sin SRV en el orden de búsqueda, la primera
+petición ya no paga esa espera. Es la misma familia de problema que D-17: un costo de arranque que no debe pagar el
+primer cliente.

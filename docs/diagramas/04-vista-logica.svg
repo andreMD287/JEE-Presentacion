@@ -12,26 +12,26 @@
 <rect x="30" y="50" width="410" height="255" fill="#fafafa" stroke="#1f1f1f" stroke-width="1.1"/>
 <text x="40" y="45" font-size="12.5" font-weight="bold" text-anchor="start" fill="#1f1f1f">presentation-jsf</text>
 <rect x="45" y="80" width="180" height="99" fill="white" stroke="#1f1f1f" stroke-width="1.1"/>
-<text x="135.0" y="98" font-size="10.5" font-weight="normal" text-anchor="middle" fill="#555555">«CDI @Named»</text>
-<text x="135.0" y="115" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1f1f1f">RequestsBean</text>
+<text x="135.0" y="98" font-size="10.5" font-weight="normal" text-anchor="middle" fill="#555555">«CDI @ViewScoped»</text>
+<text x="135.0" y="115" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1f1f1f">ResourceRequestBean</text>
 <line x1="45" y1="122" x2="225" y2="122" stroke="#1f1f1f" stroke-width="0.9"/>
-<text x="53" y="141" font-size="11.2" font-weight="normal" text-anchor="start" fill="#1f1f1f">+ registrar()</text>
-<text x="53" y="156" font-size="11.2" font-weight="normal" text-anchor="start" fill="#1f1f1f">+ atender(id)</text>
-<text x="53" y="171" font-size="11.2" font-weight="normal" text-anchor="start" fill="#1f1f1f">+ getSolicitudes()</text>
+<text x="53" y="141" font-size="11.2" font-weight="normal" text-anchor="start" fill="#1f1f1f">+ register()</text>
+<text x="53" y="156" font-size="11.2" font-weight="normal" text-anchor="start" fill="#1f1f1f">+ attend(id)</text>
+<text x="53" y="171" font-size="11.2" font-weight="normal" text-anchor="start" fill="#1f1f1f">+ search()</text>
 <rect x="245" y="80" width="180" height="84" fill="white" stroke="#1f1f1f" stroke-width="1.1"/>
 <text x="335.0" y="98" font-size="10.5" font-weight="normal" text-anchor="middle" fill="#555555">«interface»</text>
-<text x="335.0" y="115" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1f1f1f" font-style="italic">RequestGateway</text>
+<text x="335.0" y="115" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1f1f1f" font-style="italic">RequestClient</text>
 <line x1="245" y1="122" x2="425" y2="122" stroke="#1f1f1f" stroke-width="0.9"/>
 <text x="253" y="141" font-size="11.2" font-weight="normal" text-anchor="start" fill="#1f1f1f">register · findAll · findById</text>
 <text x="253" y="156" font-size="11.2" font-weight="normal" text-anchor="start" fill="#1f1f1f">attend · findPending</text>
 <rect x="45" y="210" width="180" height="69" fill="white" stroke="#1f1f1f" stroke-width="1.1"/>
 <text x="135.0" y="228" font-size="10.5" font-weight="normal" text-anchor="middle" fill="#555555">«modo rest»</text>
-<text x="135.0" y="245" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1f1f1f">RestRequestGateway</text>
+<text x="135.0" y="245" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1f1f1f">RestRequestClient</text>
 <line x1="45" y1="252" x2="225" y2="252" stroke="#1f1f1f" stroke-width="0.9"/>
 <text x="53" y="271" font-size="11.2" font-weight="normal" text-anchor="start" fill="#1f1f1f">HTTP + apikey vía Kong</text>
 <rect x="245" y="210" width="180" height="69" fill="white" stroke="#1f1f1f" stroke-width="1.1"/>
 <text x="335.0" y="228" font-size="10.5" font-weight="normal" text-anchor="middle" fill="#555555">«modo ejb»</text>
-<text x="335.0" y="245" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1f1f1f">EjbRequestGateway</text>
+<text x="335.0" y="245" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1f1f1f">EjbRequestClient</text>
 <line x1="245" y1="252" x2="425" y2="252" stroke="#1f1f1f" stroke-width="0.9"/>
 <text x="253" y="271" font-size="11.2" font-weight="normal" text-anchor="start" fill="#1f1f1f">EJB remoto a logic</text>
 <polyline points="225,112 245,112" fill="none" stroke="#1f1f1f" stroke-width="1.4" stroke-dasharray="6 4" marker-end="url(#dep)"/>
@@ -42,7 +42,7 @@
 <text x="40" y="350" font-size="12.5" font-weight="bold" text-anchor="start" fill="#1f1f1f">services</text>
 <rect x="45" y="385" width="180" height="69" fill="white" stroke="#1f1f1f" stroke-width="1.1"/>
 <text x="135.0" y="403" font-size="10.5" font-weight="normal" text-anchor="middle" fill="#555555">«JAX-RS @Provider»</text>
-<text x="135.0" y="420" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1f1f1f">ExceptionMappers</text>
+<text x="135.0" y="420" font-size="12.5" font-weight="bold" text-anchor="middle" fill="#1f1f1f">ApiExceptionMapper</text>
 <line x1="45" y1="427" x2="225" y2="427" stroke="#1f1f1f" stroke-width="0.9"/>
 <text x="53" y="446" font-size="11.2" font-weight="normal" text-anchor="start" fill="#1f1f1f">code → 400 / 404 / 409</text>
 <rect x="245" y="385" width="180" height="69" fill="white" stroke="#1f1f1f" stroke-width="1.1"/>

@@ -1,4 +1,4 @@
-# Contratos entre capas (BORRADOR — pendiente de confirmar por ambos roles)
+# Contratos entre capas
 
 > Este archivo es la fuente única de los contratos. Si algo cambia, se cambia aquí primero.
 > Al final del taller se completa con ejemplos de petición/respuesta.
