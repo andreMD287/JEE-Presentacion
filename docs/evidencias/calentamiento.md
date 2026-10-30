@@ -1,6 +1,6 @@
 # Primera llamada EJB tras un reinicio y precalentamiento (D-17)
 
-Fecha: 2026-10-29. Antecedente: Andrés (Rol 2) observó que, tras reiniciar `data` y `logic`, algunas primeras
+Fecha: 2026-10-29. Antecedente: durante la integración se observó que, tras reiniciar `data` y `logic`, algunas primeras
 llamadas EJB superaban el timeout de 5 s (D-14), aunque las siguientes tardaban 12–13 ms.
 
 ## Método
@@ -8,7 +8,7 @@ llamadas EJB superaban el timeout de 5 s (D-14), aunque las siguientes tardaban 
 Todas las sondas corren dentro de la red de Compose con `EJB_INVOCATION_TIMEOUT_MS=5000` y llaman a
 `ResourceRequestDataService.findAll()` por `remote+http://data:8080`.
 
-1. **Cliente nuevo en cada medición** (`DiagnosticoPrimeraInvocacion` de la rama `andres`): un JVM recién arrancado
+1. **Cliente nuevo en cada medición** (`DiagnosticoPrimeraInvocacion`, en `tests/integration-ejb`): un JVM recién arrancado
    llama dos veces a `data`, con `data` recién reiniciado (frío) y con `data` ya usado (caliente). La diferencia entre
    frío y caliente es el costo de arranque del servidor; lo que queda en "caliente" es el costo del cliente nuevo.
 2. **Cliente de larga vida** (equivale a `logic` ya en marcha, el caso de QA-DIS-1): un JVM llama a `data` cada

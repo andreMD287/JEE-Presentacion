@@ -7,7 +7,7 @@ sequenceDiagram
 
     W->>S: registerRequest (sobre SOAP 1.1, directo, sin gateway)
     S->>L: register(command) por EJB remoto
-    alt datos validos
+    alt datos válidos
         L->>D: save(solicitud sin id)
         D-->>L: ResourceRequestData con id
         L-->>S: ResourceRequestView

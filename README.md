@@ -14,7 +14,7 @@ pide tres esquemas y se implementan como **tres etapas del mismo sistema**:
 La pantalla JSF cambia de la etapa ① a la ③ solo con la variable `BACKEND_MODE=ejb|rest`, sin recompilar.
 
 > Estado: sistema completo. Las 89 pruebas unitarias y los seis escenarios de calidad pasan; resultados en
-> `docs/arquitectura.md` §12.
+> `docs/arquitectura.md` §13.
 
 ---
 
@@ -41,13 +41,13 @@ La pantalla JSF cambia de la etapa ① a la ③ solo con la variable `BACKEND_MO
 |---|---|
 | Código fuente (Maven multimódulo) | `contracts/`, `data/`, `logic/`, `services/`, `presentation-jsf/`, `pom.xml` |
 | **Diseño arquitectónico** (vistas 4+1, escenarios de calidad, decisiones, riesgos, trazabilidad) | `docs/arquitectura.md` |
-| Diagramas (10 figuras, SVG y PNG, con su fuente) | `docs/diagramas/` |
+| Diagramas (PNG) | `docs/diagramas/`; fuentes en `tools/diagramas/` |
 | Contratos: EJB, REST, SOAP/WSDL, gateway | `docs/api.md` |
 | Despliegue reproducible | `docker-compose.yml`, `infra/` |
 | Pruebas de API (Newman) | `tests/postman/` |
 | Scripts de los escenarios de calidad | `scripts/` |
 | Evidencias de ejecución (salidas de los escenarios y capturas de la JSF) | `docs/evidencias/` |
-| Paquete de entrega | `Taller4_Entrega.zip`, generado con `python scripts/empaquetar.py` |
+| Paquete de entrega | `Taller4_Entrega.zip` (código y diseño arquitectónico en PDF), generado con `python scripts/empaquetar.py` |
 
 ---
 
@@ -84,7 +84,7 @@ BACKEND_MODE=rest docker compose up -d --no-build presentation
 | Correr los scripts de `scripts/` | Bash (Git Bash en Windows) y `curl` |
 | Compilar y correr las pruebas unitarias fuera de Docker (opcional) | JDK 17 o superior y Maven 3.9 |
 | Regenerar las colecciones de Newman (opcional) | Python 3 |
-| Regenerar los diagramas (opcional) | Python 3 y Node.js con `@mermaid-js/mermaid-cli` (ver `docs/diagramas/README.md`) |
+| Regenerar los diagramas o el PDF del diseño (opcional) | Python 3 y Node.js con `@mermaid-js/mermaid-cli`, que trae puppeteer (ver `tools/diagramas/README.md`) |
 
 No hace falta instalar WildFly, Tomcat, Kong, PostgreSQL ni Newman: todos corren en contenedores.
 
@@ -165,7 +165,7 @@ Cada script imprime el resultado (`CUMPLE` o `NO CUMPLE`) y guarda la salida en 
 | `scripts/medir-latencia.sh` | QA-REN-1 Rendimiento | p50 y p95 de cada camino (①, ② y ③) |
 | `scripts/rn-5-concurrencia.sh` | RN-5 con concurrencia | 10 atenciones simultáneas: una gana y las demás reciben 409 |
 
-Resultados vigentes en `docs/arquitectura.md` §12: todos los escenarios cumplen.
+Resultados vigentes en `docs/arquitectura.md` §13: todos los escenarios cumplen.
 
 ### 5.3 Recorrido manual
 
@@ -272,7 +272,7 @@ Variables principales: `BACKEND_MODE` (`ejb` o `rest`), `EJB_INVOCATION_TIMEOUT_
 
 ## 10. Decisiones de diseño y alcance
 
-Las 17 decisiones completas, con alternativas, trade-offs y evidencia, están en `docs/arquitectura.md` §9. Las principales:
+Las decisiones completas, con alternativas, compromisos y evidencia, están en `docs/arquitectura.md` §10. Las principales:
 
 | Decisión | Motivo | Costo o alternativa descartada |
 |---|---|---|
@@ -307,7 +307,7 @@ producción también se enrutaría SOAP por él.
 
 ## 12. Distribución del trabajo
 
-**Rol 1**
+**André Landinez**
 
 - Validación técnica previa (spikes de EJB remoto entre Tomcat y WildFly, y entre dos WildFly).
 - Configuración base: Maven multimódulo, `contracts` y `RemoteEjbLocator`.
@@ -316,7 +316,7 @@ producción también se enrutaría SOAP por él.
 - API Gateway (Kong), colecciones de Newman y scripts de los escenarios de calidad.
 - Diseño arquitectónico, diagramas y paquete de entrega.
 
-**Rol 2**
+**Andrés Barrios**
 
 - Capa de Lógica: reglas de negocio del Taller 2, puerto y adaptador remoto, con sus pruebas.
 - Capa de servicios: REST (JAX-RS) y SOAP (JAX-WS) con la traducción de errores.

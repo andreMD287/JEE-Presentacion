@@ -9,7 +9,9 @@ Uso:  python generar.py            -> escribe los .svg en esta carpeta
 from pathlib import Path
 from xml.sax.saxutils import escape
 
-OUT = Path(__file__).resolve().parent
+# Los SVG intermedios van a build/; render.js los exporta a PNG en docs/diagramas/
+OUT = Path(__file__).resolve().parent / "build"
+OUT.mkdir(exist_ok=True)
 FONT = "Segoe UI, Helvetica, Arial, sans-serif"
 INK = "#1f1f1f"
 MUTED = "#555555"
@@ -244,8 +246,8 @@ def etapa1():
     # logic
     s.node(540, 60, 330, 370, "logic", "WildFly 38 · EJB")
     s.component(560, 110, 290, "ResourceRequestServiceBean", "@Stateless · NOT_SUPPORTED",
-                ["implementa ResourceRequestService", "reglas RN-1..RN-6 (código del T2)"])        # 110-192
-    s.component(560, 225, 290, "ResourceRequestRepository", "puerto del T2",
+                ["implementa ResourceRequestService", "reglas de negocio RN-1..RN-6"])        # 110-192
+    s.component(560, 225, 290, "ResourceRequestRepository", "puerto del dominio",
                 ["save · findById · findAll"])                                                     # 225-292
     s.component(560, 325, 290, "RemoteResourceRequestRepository", "adaptador",
                 ["traduce dominio ⇄ ResourceRequestData"])                                         # 325-392
@@ -282,11 +284,11 @@ def etapas23():
     s.box(30, 70, 200, 72, "Cliente REST", ["Postman · Newman · apps"], stereo="sistema externo")
     s.box(30, 200, 200, 72, "presentation (JSF)", ["RestRequestClient"], stereo="BACKEND_MODE=rest")
     s.box(30, 470, 200, 72, "Cliente SOAP", ["SoapUI · Newman · heredados"], stereo="sistema externo")
-    s.badge(218, 84, "②")
-    s.badge(218, 214, "③")
-    s.badge(218, 484, "③")
+    s.badge(218, 84, "2")
+    s.badge(218, 214, "3")
+    s.badge(218, 484, "3")
     # gateway
-    s.node(320, 50, 270, 300, "gateway", "Kong 3.9 · DB-less (kong.yml)", badge="③")
+    s.node(320, 50, 270, 300, "gateway", "Kong 3.9 · DB-less (kong.yml)", badge="3")
     s.component(340, 100, 230, "key-auth", lines=["sin API key o inválida → 401", "QA-SEG-1"])     # 100-167
     s.component(340, 185, 230, "rate-limiting", lines=["> 20 peticiones/s → 429", "QA-DIS-2"])    # 185-252
     s.component(340, 270, 230, "correlation-id", lines=["agrega X-Correlation-ID", "trazabilidad"])  # 270-337
@@ -297,7 +299,7 @@ def etapas23():
     s.arrow([(290, 133), (340, 133)])
     s.label(268, 172, ["REST", "+ apikey"])
     # services
-    s.node(690, 50, 320, 520, "services", "WildFly 38 · fachada sin reglas", badge="②")
+    s.node(690, 50, 320, 520, "services", "WildFly 38 · fachada sin reglas", badge="2")
     s.component(710, 105, 280, "ResourceRequestResource", "JAX-RS", ["/services/api/v1/requests"])  # 105-172
     s.component(710, 205, 280, "ApiExceptionMapper", "JAX-RS @Provider",
                 ["BusinessException.code → 400 / 404 / 409"])                                       # 205-272
@@ -312,7 +314,7 @@ def etapas23():
     s.arrow([(230, 505), (710, 505)])
     s.label(460, 505, "SOAP 1.1 por HTTP (sin gateway)")
     # logic
-    s.node(1110, 60, 320, 210, "logic", "WildFly 38 · sin cambios desde ①")
+    s.node(1110, 60, 320, 210, "logic", "WildFly 38 · sin cambios desde la etapa 1")
     s.component(1130, 110, 280, "ResourceRequestServiceBean", "@Stateless", ["reglas RN-1..RN-6"])  # 110-177
     s.component(1130, 195, 280, "RemoteResourceRequestRepository", "adaptador")                   # 195-247
     s.arrow([(1270, 177), (1270, 195)])
@@ -327,7 +329,7 @@ def etapas23():
     s.cylinder(1225, 525, 90, 90, ["PostgreSQL"])
     s.arrow([(1270, 432), (1270, 525)])
     s.label(1270, 492, "JDBC")
-    s.legend(30, 652, [("badge:②", "agregado en la etapa ②"), ("badge:③", "agregado en la etapa ③"),
+    s.legend(30, 652, [("badge:2", "agregado en la etapa 2"), ("badge:3", "agregado en la etapa 3"),
                        ("call", "llamada (protocolo en la etiqueta)")])
     s.save("03-etapas2-3.svg")
 
@@ -382,7 +384,7 @@ def logica():
     # logic
     s.package(920, 50, 430, 420, "logic")
     s.classbox(935, 80, 380, "ResourceRequestServiceBean", "@Stateless · NOT_SUPPORTED",
-               ["reglas RN-1..RN-6 (código del T2)"])                                               # 80-149
+               ["reglas de negocio RN-1..RN-6"])                                               # 80-149
     s.classbox(935, 200, 230, "ResourceRequestRepository", "interface · puerto",
                ["save · findById · findAll"], italic=True)                                          # 200-269
     s.classbox(1185, 200, 150, "ResourceRequest", "dominio", ["id · estado …"])
@@ -414,7 +416,7 @@ def desarrollo():
         ("services", "services.war", "WildFly · services",
          ["recurso JAX-RS + ApiExceptionMapper", "endpoint JAX-WS + BusinessFault"]),
         ("logic", "logic.war", "WildFly · logic",
-         ["ResourceRequestServiceBean (T2)", "puerto ResourceRequestRepository", "adaptador remoto",
+         ["ResourceRequestServiceBean", "puerto ResourceRequestRepository", "adaptador remoto",
           "dominio ResourceRequest"]),
         ("data", "data.war", "WildFly · data",
          ["ResourceRequestDataServiceBean", "ResourceRequestEntity", "persistence.xml"]),
