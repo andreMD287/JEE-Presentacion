@@ -11,15 +11,22 @@ public class ResourceRequest {
     private final int quantity;
     private final Priority priority;
     private final RequestStatus status;
+    private final Long version;
 
     public ResourceRequest(Long id, String disasterDescription, String resourceType,
                            int quantity, Priority priority, RequestStatus status) {
+        this(id, disasterDescription, resourceType, quantity, priority, status, null);
+    }
+
+    public ResourceRequest(Long id, String disasterDescription, String resourceType,
+                           int quantity, Priority priority, RequestStatus status, Long version) {
         this.id = id;
         this.disasterDescription = disasterDescription;
         this.resourceType = resourceType;
         this.quantity = quantity;
         this.priority = priority;
         this.status = status;
+        this.version = version;
     }
 
     public Long getId() { return id; }
@@ -28,8 +35,9 @@ public class ResourceRequest {
     public int getQuantity() { return quantity; }
     public Priority getPriority() { return priority; }
     public RequestStatus getStatus() { return status; }
+    public Long getVersion() { return version; }
 
     public ResourceRequest withStatus(RequestStatus newStatus) {
-        return new ResourceRequest(id, disasterDescription, resourceType, quantity, priority, newStatus);
+        return new ResourceRequest(id, disasterDescription, resourceType, quantity, priority, newStatus, version);
     }
 }

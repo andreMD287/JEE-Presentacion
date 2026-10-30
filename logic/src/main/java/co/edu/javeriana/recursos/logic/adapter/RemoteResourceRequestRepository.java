@@ -58,11 +58,11 @@ public class RemoteResourceRequestRepository implements ResourceRequestRepositor
 
     private static ResourceRequestData toData(ResourceRequest value) {
         return new ResourceRequestData(value.getId(), value.getDisasterDescription(),
-                value.getResourceType(), value.getQuantity(), value.getPriority(), value.getStatus());
+                value.getResourceType(), value.getQuantity(), value.getPriority(), value.getStatus(), value.getVersion());
     }
 
     private static ResourceRequest toDomain(ResourceRequestData value) {
         return new ResourceRequest(value.getId(), value.getDisasterDescription(),
-                value.getResourceType(), value.getQuantity(), value.getPriority(), value.getStatus());
+                value.getResourceType(), value.getQuantity(), value.getPriority(), value.getStatus(), value.getVersion());
     }
 }

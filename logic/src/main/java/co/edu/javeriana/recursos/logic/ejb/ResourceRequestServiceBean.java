@@ -7,6 +7,7 @@ import co.edu.javeriana.recursos.contracts.dto.RequestStatus;
 import co.edu.javeriana.recursos.contracts.dto.ResourceRequestView;
 import co.edu.javeriana.recursos.contracts.exception.AlreadyAttendedException;
 import co.edu.javeriana.recursos.contracts.exception.BusinessValidationException;
+import co.edu.javeriana.recursos.contracts.exception.ConcurrentUpdateException;
 import co.edu.javeriana.recursos.contracts.exception.RequestNotFoundException;
 import co.edu.javeriana.recursos.logic.domain.ResourceRequest;
 import co.edu.javeriana.recursos.logic.port.ResourceRequestRepository;
@@ -61,7 +62,11 @@ public class ResourceRequestServiceBean implements ResourceRequestService {
         if (current.getStatus() == RequestStatus.ATENDIDA) {
             throw new AlreadyAttendedException(id);
         }
-        return toView(repository.save(current.withStatus(RequestStatus.ATENDIDA)));
+        try {
+            return toView(repository.save(current.withStatus(RequestStatus.ATENDIDA)));
+        } catch (ConcurrentUpdateException e) {
+            throw new AlreadyAttendedException(id);
+        }
     }
 
     @Override

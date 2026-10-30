@@ -30,22 +30,36 @@ class RemoteResourceRequestRepositoryTest {
         when(remote.save(any())).thenAnswer(i -> {
             ResourceRequestData sent = i.getArgument(0);
             assertNull(sent.getId());
+            assertNull(sent.getVersion());
             assertEquals("Sismo", sent.getDisasterDescription());
             assertEquals("Agua", sent.getResourceType());
             assertEquals(10, sent.getQuantity());
             assertEquals(Priority.ALTA, sent.getPriority());
             assertEquals(RequestStatus.PENDIENTE, sent.getStatus());
             sent.setId(8L);
+            sent.setVersion(0L);
             return sent;
         });
-        assertEquals(8L, repository.save(pending(null)).getId());
+        ResourceRequest inserted = repository.save(pending(null));
+        assertEquals(8L, inserted.getId());
+        assertEquals(Long.valueOf(0L), inserted.getVersion());
     }
 
-    @Test void updatePreservesIdAndStatus() {
-        when(remote.save(any())).thenAnswer(i -> i.getArgument(0));
-        ResourceRequest updated = repository.save(pending(4L).withStatus(RequestStatus.ATENDIDA));
+    @Test void updatePreservesIdStatusAndVersion() {
+        when(remote.save(any())).thenAnswer(i -> {
+            ResourceRequestData sent = i.getArgument(0);
+            assertEquals(4L, sent.getId());
+            assertEquals(Long.valueOf(5L), sent.getVersion());
+            assertEquals(RequestStatus.ATENDIDA, sent.getStatus());
+            sent.setVersion(6L);
+            return sent;
+        });
+        ResourceRequest current = new ResourceRequest(4L, "Sismo", "Agua", 10,
+                Priority.ALTA, RequestStatus.PENDIENTE, 5L);
+        ResourceRequest updated = repository.save(current.withStatus(RequestStatus.ATENDIDA));
         assertEquals(4L, updated.getId());
         assertEquals(RequestStatus.ATENDIDA, updated.getStatus());
+        assertEquals(Long.valueOf(6L), updated.getVersion());
     }
 
     @Test void missingRemoteRequestReturnsEmptyOptional() {
@@ -58,6 +72,7 @@ class RemoteResourceRequestRepositoryTest {
         var found = repository.findById(5L).orElseThrow();
         assertEquals(5L, found.getId());
         assertEquals(RequestStatus.ATENDIDA, found.getStatus());
+        assertEquals(Long.valueOf(2L), found.getVersion());
     }
 
     @Test void findAllConvertsDtoListPreservingOrder() {
@@ -66,6 +81,15 @@ class RemoteResourceRequestRepositoryTest {
         var items = repository.findAll();
         assertEquals(List.of(1L, 2L), items.stream().map(ResourceRequest::getId).toList());
         assertEquals(RequestStatus.ATENDIDA, items.get(1).getStatus());
+    }
+
+    @Test void propagatesConcurrentUpdateToBusinessLayer() {
+        when(remote.save(any())).thenThrow(
+                new co.edu.javeriana.recursos.contracts.exception.ConcurrentUpdateException(4L));
+        ResourceRequest current = new ResourceRequest(4L, "Sismo", "Agua", 10,
+                Priority.ALTA, RequestStatus.PENDIENTE, 0L);
+        assertThrows(co.edu.javeriana.recursos.contracts.exception.ConcurrentUpdateException.class,
+                () -> repository.save(current.withStatus(RequestStatus.ATENDIDA)));
     }
 
     @Test void forwardsRemoteErrorsInsteadOfSwallowingThem() {
@@ -78,6 +102,6 @@ class RemoteResourceRequestRepositoryTest {
     }
 
     private ResourceRequestData data(Long id, RequestStatus status) {
-        return new ResourceRequestData(id, "Sismo", "Agua", 10, Priority.ALTA, status);
+        return new ResourceRequestData(id, "Sismo", "Agua", 10, Priority.ALTA, status, 2L);
     }
 }

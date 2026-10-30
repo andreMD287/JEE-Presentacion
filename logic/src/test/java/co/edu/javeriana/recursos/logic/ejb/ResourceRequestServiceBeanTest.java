@@ -5,6 +5,7 @@ import co.edu.javeriana.recursos.contracts.dto.Priority;
 import co.edu.javeriana.recursos.contracts.dto.RequestStatus;
 import co.edu.javeriana.recursos.contracts.exception.AlreadyAttendedException;
 import co.edu.javeriana.recursos.contracts.exception.BusinessValidationException;
+import co.edu.javeriana.recursos.contracts.exception.ConcurrentUpdateException;
 import co.edu.javeriana.recursos.contracts.exception.RequestNotFoundException;
 import co.edu.javeriana.recursos.logic.domain.ResourceRequest;
 import co.edu.javeriana.recursos.logic.port.ResourceRequestRepository;
@@ -148,7 +149,9 @@ class ResourceRequestServiceBeanTest {
         when(repository.save(any())).thenAnswer(i -> i.getArgument(0));
         var result = service.attend(7L);
         assertEquals(RequestStatus.ATENDIDA, result.getStatus());
-        verify(repository).save(argThat(r -> r.getId().equals(7L) && r.getStatus() == RequestStatus.ATENDIDA));
+        verify(repository).save(argThat(r -> r.getId().equals(7L)
+                && r.getStatus() == RequestStatus.ATENDIDA
+                && Long.valueOf(0L).equals(r.getVersion())));
     }
 
     @Test void attendNotFoundThrows404WithoutSaving() {
@@ -164,6 +167,15 @@ class ResourceRequestServiceBeanTest {
         assertEquals("ALREADY_ATTENDED", error.getCode());
         assertEquals("La solicitud con id 7 ya fue atendida", error.getMessage());
         verify(repository, never()).save(any());
+    }
+
+    @Test void concurrentUpdateIsReportedAsAlreadyAttended() {
+        when(repository.findById(7L)).thenReturn(Optional.of(pending(7L)));
+        when(repository.save(any())).thenThrow(new ConcurrentUpdateException(7L));
+        var error = assertThrows(AlreadyAttendedException.class, () -> service.attend(7L));
+        assertEquals("ALREADY_ATTENDED", error.getCode());
+        assertEquals("La solicitud con id 7 ya fue atendida", error.getMessage());
+        verify(repository).save(argThat(r -> Long.valueOf(0L).equals(r.getVersion())));
     }
 
     @Test void onlyPendingAreReturned() {
@@ -190,7 +202,7 @@ class ResourceRequestServiceBeanTest {
     }
 
     private ResourceRequest pending(Long id) {
-        return new ResourceRequest(id, "Sismo", "Agua", 10, Priority.ALTA, RequestStatus.PENDIENTE);
+        return new ResourceRequest(id, "Sismo", "Agua", 10, Priority.ALTA, RequestStatus.PENDIENTE, 0L);
     }
 
     private ResourceRequest attended(Long id) {
