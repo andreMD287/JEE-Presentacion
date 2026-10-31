@@ -51,4 +51,29 @@ class ApiExceptionMapperTest {
         assertNotNull(body.getTimestamp());
         assertFalse(body.getTimestamp().isBlank());
     }
+
+    @Test void unavailableEjbReturns503() {
+        assertError(new jakarta.ejb.NoSuchEJBException("data no disponible"),
+                503, "SERVICE_UNAVAILABLE",
+                "El servicio no esta disponible temporalmente");
+    }
+
+    @Test void suppressedEjbFailureReturns503() {
+        RuntimeException wrapper = new RuntimeException("fallo remoto");
+        wrapper.addSuppressed(new jakarta.ejb.NoSuchEJBException("data"));
+        assertError(wrapper, 503, "SERVICE_UNAVAILABLE",
+                "El servicio no esta disponible temporalmente");
+    }
+
+    @Test void nestedNetworkFailureReturns503() {
+        RuntimeException wrapper =
+                new RuntimeException(new java.net.ConnectException("sin conexion"));
+        assertError(wrapper, 503, "SERVICE_UNAVAILABLE",
+                "El servicio no esta disponible temporalmente");
+    }
+
+    @Test void genericProgrammingFailureRemains500() {
+        assertError(new IllegalStateException("fallo de codigo"),
+                500, "INTERNAL_ERROR", "No se pudo completar la operación");
+    }
 }
