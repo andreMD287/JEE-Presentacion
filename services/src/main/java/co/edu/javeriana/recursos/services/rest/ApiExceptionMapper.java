@@ -1,5 +1,6 @@
 package co.edu.javeriana.recursos.services.rest;
 
+import co.edu.javeriana.recursos.services.client.DependencyAvailability;
 import co.edu.javeriana.recursos.contracts.exception.AlreadyAttendedException;
 import co.edu.javeriana.recursos.contracts.exception.BusinessException;
 import co.edu.javeriana.recursos.contracts.exception.BusinessValidationException;
@@ -44,6 +45,11 @@ public class ApiExceptionMapper implements ExceptionMapper<Exception> {
             status = error.getResponse().getStatus();
             code = status == 400 ? "MALFORMED_JSON" : "HTTP_ERROR";
             message = "La solicitud HTTP no es válida";
+        } else if (DependencyAvailability.isUnavailable(exception)) {
+            status = 503;
+            code = "SERVICE_UNAVAILABLE";
+            message = "El servicio no esta disponible temporalmente";
+            LOG.log(Level.WARNING, "Dependencia no disponible", exception);
         } else {
             status = 500;
             code = "INTERNAL_ERROR";

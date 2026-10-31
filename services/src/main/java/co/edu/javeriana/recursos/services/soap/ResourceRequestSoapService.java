@@ -5,6 +5,7 @@ import co.edu.javeriana.recursos.contracts.dto.CreateResourceRequestCommand;
 import co.edu.javeriana.recursos.contracts.dto.ResourceRequestView;
 import co.edu.javeriana.recursos.contracts.exception.BusinessException;
 import co.edu.javeriana.recursos.services.client.LogicClient;
+import co.edu.javeriana.recursos.services.client.DependencyAvailability;
 import jakarta.jws.WebMethod;
 import jakarta.jws.WebParam;
 import jakarta.jws.WebResult;
@@ -98,6 +99,11 @@ public class ResourceRequestSoapService {
 
     private static BusinessFault internalFault(RuntimeException e) {
         String message = "No se pudo completar la operación";
+        if (DependencyAvailability.isUnavailable(e)) {
+            message = "El servicio no esta disponible temporalmente";
+            return new BusinessFault(message,
+                    new BusinessFaultInfo("SERVICE_UNAVAILABLE", message), e);
+        }
         return new BusinessFault(message, new BusinessFaultInfo("INTERNAL_ERROR", message), e);
     }
 }

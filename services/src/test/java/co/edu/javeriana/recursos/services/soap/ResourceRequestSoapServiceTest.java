@@ -79,4 +79,23 @@ class ResourceRequestSoapServiceTest {
         assertEquals("INTERNAL_ERROR", fault.getFaultInfo().getCode());
         assertFalse(fault.getMessage().contains("pass123"));
     }
+
+    @Test void unavailableEjbFaultUsesServiceUnavailable() {
+        when(logic.findAll()).thenThrow(
+                new jakarta.ejb.NoSuchEJBException("data no disponible"));
+        BusinessFault fault =
+                assertThrows(BusinessFault.class, soap::listRequests);
+        assertEquals("SERVICE_UNAVAILABLE", fault.getFaultInfo().getCode());
+        assertFalse(fault.getFaultInfo().getMessage().contains("data no disponible"));
+    }
+
+    @Test void suppressedFailureFaultUsesServiceUnavailable() {
+        RuntimeException wrapper = new RuntimeException("fallo remoto");
+        wrapper.addSuppressed(new jakarta.ejb.NoSuchEJBException("data"));
+        when(logic.findAll()).thenThrow(wrapper);
+
+        BusinessFault fault =
+                assertThrows(BusinessFault.class, soap::listRequests);
+        assertEquals("SERVICE_UNAVAILABLE", fault.getFaultInfo().getCode());
+    }
 }
