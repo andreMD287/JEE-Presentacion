@@ -29,6 +29,7 @@ public class ResourceRequestBean implements Serializable {
     private ResourceRequestView selected;
     private List<ResourceRequestView> requests = List.of();
     private boolean onlyPending;
+    private boolean listAvailable;
     private String notice;
     private String error;
 
@@ -99,8 +100,10 @@ public class ResourceRequestBean implements Serializable {
     private void refresh() {
         try {
             requests = List.copyOf(backend().findAll());
+            listAvailable = true;
         } catch (RuntimeException e) {
             requests = List.of();
+            listAvailable = false;
             report(e);
         }
     }
@@ -127,6 +130,7 @@ public class ResourceRequestBean implements Serializable {
         return requests.stream().filter(r -> r.getStatus() == RequestStatus.ATENDIDA).count();
     }
     public int getTotalCount() { return requests.size(); }
+    public boolean isListAvailable() { return listAvailable; }
     public String getMode() { return RequestClientSelector.mode().toUpperCase(java.util.Locale.ROOT); }
 
     public String getDescription() { return description; }
