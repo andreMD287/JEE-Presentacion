@@ -3,9 +3,9 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-GATEWAY="${GATEWAY:-http://localhost:8000/api/v1}"
-SERVICES="${SERVICES:-http://localhost:8082/services/api/v1}"
-JSF="${JSF:-http://localhost:8080/recursos}"
+GATEWAY="${GATEWAY:-http://127.0.0.1:8000/api/v1}"
+SERVICES="${SERVICES:-http://127.0.0.1:8082/services/api/v1}"
+JSF="${JSF:-http://127.0.0.1:8080/recursos}"
 API_KEY="${API_KEY:-clave-taller4}"
 EVIDENCIAS="$ROOT/docs/evidencias/qa"
 mkdir -p "$EVIDENCIAS"

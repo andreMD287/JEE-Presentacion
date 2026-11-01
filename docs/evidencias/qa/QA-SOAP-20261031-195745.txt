@@ -1,0 +1,20 @@
+QA SOAP - INDISPONIBILIDAD DE DATOS
+Rama: audit/integracion-final
+Commit del codigo probado: b04c968
+
+Escenario: detener data e invocar listRequests por SOAP.
+Peticion: SOAP 1.1, sin SOAPAction explicito.
+
+Resultados observados:
+HTTP: 500
+Tiempo: 3594 ms
+SOAP Fault: SI
+SERVICE_UNAVAILABLE: SI
+Error SOAPAction: NO
+Trazas Java expuestas: NO
+Datos restaurado: healthy
+Servicios: healthy
+Resultado: CUMPLE
+
+RESPUESTA SOAP:
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"><soap:Body><soap:Fault><faultcode>soap:Server</faultcode><faultstring>El servicio no esta disponible temporalmente</faultstring><detail><ns2:BusinessFault xmlns:ns2="http://recursos.javeriana.edu.co/soap"><code>SERVICE_UNAVAILABLE</code><message>El servicio no esta disponible temporalmente</message></ns2:BusinessFault></detail></soap:Fault></soap:Body></soap:Envelope>

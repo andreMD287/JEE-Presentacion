@@ -21,6 +21,7 @@ class ResourceRequestBeanTest {
                 row(2, RequestStatus.ATENDIDA)));
         ResourceRequestBean bean = new ResourceRequestBean(client);
         bean.load();
+        assertTrue(bean.isListAvailable());
         assertEquals(2, bean.getTotalCount());
         assertEquals(1, bean.getPendingCount());
         bean.togglePending();
@@ -55,7 +56,28 @@ class ResourceRequestBeanTest {
         assertTrue(bean.getError().contains("No se pudo acceder al servicio"));
         assertFalse(bean.getError().contains("Exception"));
         assertFalse(bean.getError().contains("contraseña interna"));
+        assertFalse(bean.isListAvailable());
         assertEquals(0, bean.getTotalCount());
+    }
+    @Test void emptySuccessfulListIsAvailable() {
+        RequestClient client = mock(RequestClient.class);
+        when(client.findAll()).thenReturn(List.of());
+        ResourceRequestBean bean = new ResourceRequestBean(client);
+        bean.load();
+        assertTrue(bean.isListAvailable());
+        assertEquals(0, bean.getTotalCount());
+    }
+    @Test void refreshRecoversAfterTemporaryFailure() {
+        RequestClient client = mock(RequestClient.class);
+        when(client.findAll()).thenThrow(new IllegalStateException("sin conexion"))
+                .thenReturn(List.of(row(9, RequestStatus.PENDIENTE)));
+        ResourceRequestBean bean = new ResourceRequestBean(client);
+        bean.load();
+        assertFalse(bean.isListAvailable());
+        bean.reload();
+        assertTrue(bean.isListAvailable());
+        assertNull(bean.getError());
+        assertEquals(1, bean.getTotalCount());
     }
     @Test void searchRejectsInvalidIdWithoutRemoteCall() {
         RequestClient client = mock(RequestClient.class);

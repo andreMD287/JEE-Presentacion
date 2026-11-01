@@ -31,9 +31,9 @@
                 <h:outputText value="#{requests.error}"/>
             </h:panelGroup>
             <div class="stats">
-                <div class="stat"><span>Total de solicitudes</span><strong><h:outputText value="#{requests.totalCount}"/></strong></div>
-                <div class="stat"><span>Pendientes</span><strong><h:outputText value="#{requests.pendingCount}"/></strong></div>
-                <div class="stat"><span>Atendidas</span><strong><h:outputText value="#{requests.attendedCount}"/></strong></div>
+                <div class="stat"><span>Total de solicitudes</span><strong><h:outputText value="#{requests.listAvailable ? requests.totalCount : 'No disponible'}"/></strong></div>
+                <div class="stat"><span>Pendientes</span><strong><h:outputText value="#{requests.listAvailable ? requests.pendingCount : 'No disponible'}"/></strong></div>
+                <div class="stat"><span>Atendidas</span><strong><h:outputText value="#{requests.listAvailable ? requests.attendedCount : 'No disponible'}"/></strong></div>
             </div>
             <div class="two-columns">
                 <section class="panel">
@@ -111,8 +111,11 @@
                             <h:outputText value="—" rendered="#{item.status eq 'ATENDIDA'}"/>
                         </h:column>
                     </h:dataTable>
-                    <h:panelGroup layout="block" rendered="#{empty requests.shownRequests}" styleClass="empty-state">
+                    <h:panelGroup layout="block" rendered="#{requests.listAvailable and empty requests.shownRequests}" styleClass="empty-state">
                         No hay solicitudes para mostrar.
+                    </h:panelGroup>
+                    <h:panelGroup layout="block" rendered="#{not requests.listAvailable}" styleClass="empty-state">
+                        No se pueden consultar las solicitudes en este momento.
                     </h:panelGroup>
                 </div>
             </section>

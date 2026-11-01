@@ -1,0 +1,20 @@
+== QA-DIS-1 | 2026-10-31 19:42:47 | 0eb7aef
+   evidencia: docs/evidencias/qa/QA-DIS-1-20261031-194247.tx
+1) Antes de la caida:
+   JSF (etapa 1, EJB)           HTTP 200 en   110 ms | contenido: normal               | traza: no | OK
+   REST via gateway (etapa 3)   HTTP 200 en   136 ms | contenido: normal               | traza: no | OK
+2) Deteniendo data:
+ Container jee-presentacion-data-1 Stopping
+ Container jee-presentacion-data-1 Stopped
+   JSF (etapa 1, EJB)           HTTP 200 en  3888 ms | contenido: error JSF            | traza: no | OK
+   REST via gateway (etapa 3)   HTTP 503 en   130 ms | contenido: SERVICE_UNAVAILABLE  | traza: no | OK
+3) Restaurando solo data:
+ Container jee-presentacion-postgres-1 Waiting
+ Container jee-presentacion-postgres-1 Healthy
+ Container jee-presentacion-data-1 Starting
+ Container jee-presentacion-data-1 Started
+   JSF (etapa 1, EJB)           HTTP 200 en   142 ms | contenido: normal               | traza: no | OK
+   REST via gateway (etapa 3)   HTTP 200 en   140 ms | contenido: normal               | traza: no | OK
+Mayor tiempo con data caido: 3888 ms (limite 5000 ms) | trazas: 0
+Clientes recuperados: 2 de 2
+RESULTADO: CUMPLE - errores controlados <= 5 s y recuperacion sin reiniciar otras capas
