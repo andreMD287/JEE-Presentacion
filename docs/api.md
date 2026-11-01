@@ -75,7 +75,8 @@ Errores con el **mismo cuerpo del T2**: `{"code": "...", "message": "...", "time
 | `RequestNotFoundException` | 404 | `REQUEST_NOT_FOUND` |
 | `AlreadyAttendedException` | 409 | `ALREADY_ATTENDED` |
 | JSON vacío / mal formado | 400 | `EMPTY_BODY` / `MALFORMED_JSON` |
-| Cualquier otra | 500 | `INTERNAL_ERROR` |
+| Dependencia no disponible (EJB o conexión remota) | 503 | `SERVICE_UNAVAILABLE` |
+| Otros errores internos | 500 | `INTERNAL_ERROR` |
 
 ## 4. SOAP (`services`, etapa ③, sin gateway)
 
@@ -93,7 +94,9 @@ Errores con el **mismo cuerpo del T2**: `{"code": "...", "message": "...", "time
 
   Los campos de los DTO viajan con sus nombres Java (`id`, `disasterDescription`, `resourceType`, `quantity`, `priority`, `status`).
 - Errores: SOAP Fault (HTTP 500) con `faultstring` = mensaje de negocio y en `detail` un elemento con `<code>` y `<message>`
-  (p. ej. `@WebFault(name = "BusinessFault")` con un bean `{code, message}`). Mismos `code` que la tabla REST.
+  (p. ej. `@WebFault(name = "BusinessFault")` con un bean `{code, message}`).
+  Si una dependencia no está disponible, SOAP devuelve HTTP 500 con un Fault cuyo `detail` contiene `SERVICE_UNAVAILABLE`.
+  Los demás códigos siguen la clasificación de errores de la API REST.
 - Ejemplo de petición (`registerRequest`):
 
 ```xml
