@@ -1,64 +1,110 @@
 #!/usr/bin/env bash
-# QA-DIS-1 (disponibilidad / manejo de fallos): se detiene la capa data.
-# Medida: los clientes reciben un error controlado (sin stack trace) en <= 5 s (EJB_INVOCATION_TIMEOUT_MS) y, al
-# reiniciar solo data, el sistema vuelve a responder sin reiniciar logic, services ni presentation.
+# QA-DIS-1: al detener data, los clientes presentan errores controlados <= 5000 ms;
+# al restaurar data, JSF y REST recuperan la respuesta sin reiniciar otras capas.
 source "$(dirname "$0")/lib.sh"
 evidencia QA-DIS-1
 
+LIMITE_MS=5000
+body=$(mktemp)
+res=$(mktemp)
+data_detenida=0
+
+# Asegura restauracion incluso cuando falla una comprobacion o se recibe Ctrl+C.
+limpiar() {
+    local estado=$?
+    trap - EXIT
+    if [ "$data_detenida" -eq 1 ]; then
+        echo "Restaurando data tras interrupcion o error..."
+        if ! compose start data >/dev/null || ! esperar_sano data 180; then
+            echo "ATENCION: data no pudo restaurarse; verificar docker compose ps" >&2
+            estado=1
+        fi
+    fi
+    rm -f "$body" "$res"
+    exit "$estado"
+}
+trap limpiar EXIT
+
 medir() {
-    # medir <etiqueta> <url> [header]
-    local t0 code t
+    # medir <etiqueta> <url> <normal|caida> [header]
+    local etiqueta="$1" url="$2" fase="$3" header="${4:-}"
+    local t0 t code traza="no" contenido="normal" codigo_interno="" salida=0
     t0=$(ahora_ms)
-    if [ -n "${3:-}" ]; then
-        code=$(curl -s -m 60 -o /tmp/qa-dis-1.body -w '%{http_code}' -H "$3" "$2")
+    if [ -n "$header" ]; then
+        code=$(curl --silent --show-error --max-time 15 -o "$body" -w '%{http_code}' -H "$header" "$url") || salida=$?
     else
-        code=$(curl -s -m 60 -o /tmp/qa-dis-1.body -w '%{http_code}' "$2")
+        code=$(curl --silent --show-error --max-time 15 -o "$body" -w '%{http_code}' "$url") || salida=$?
     fi
     t=$(( $(ahora_ms) - t0 ))
-    local traza="no" contenido="datos"
-    grep -qiE 'Exception|at [a-z]+\.[a-z]+\.' /tmp/qa-dis-1.body && traza="SÍ"
-    # La JSF responde 200 también cuando muestra el error: se mira el contenido, no solo el código
-    if grep -q 'No se pudo' /tmp/qa-dis-1.body || grep -q '"code":"' /tmp/qa-dis-1.body; then
-        contenido="error controlado"
-        code="${code}-error"
+    if [ "$salida" -ne 0 ]; then
+        echo "ERROR: curl fallo en $etiqueta con codigo $salida" >&2
+        return 1
     fi
-    printf "   %-28s HTTP %-9s en %5d ms | muestra: %-16s | stack trace visible: %s\n" \
-        "$1" "$code" "$t" "$contenido" "$traza"
-    echo "$t $code $traza" >> /tmp/qa-dis-1.res
+    if grep -qiE 'Exception|at [a-z]+\.[a-z]+\.' "$body"; then traza="SI"; fi
+    if grep -q 'No se pudo acceder al servicio' "$body"; then
+        contenido="error JSF"
+    elif grep -q '"code":"SERVICE_UNAVAILABLE"' "$body"; then
+        contenido="SERVICE_UNAVAILABLE"
+    elif grep -q '"code":"INTERNAL_ERROR"' "$body"; then
+        contenido="INTERNAL_ERROR"
+    fi
+    local correcto=0
+    if [ "$fase" = "normal" ]; then
+        [ "$code" = 200 ] && [ "$traza" = "no" ] && correcto=1
+    elif [ "$etiqueta" = "JSF (etapa 1, EJB)" ]; then
+        [ "$code" = 200 ] && [ "$contenido" = "error JSF" ] && [ "$traza" = "no" ] && [ "$t" -le "$LIMITE_MS" ] && correcto=1
+    else
+        # main devuelve 500/INTERNAL_ERROR; la mejora opcional cambia a 503/SERVICE_UNAVAILABLE.
+        if { [ "$code" = 500 ] && [ "$contenido" = "INTERNAL_ERROR" ]; } ||
+           { [ "$code" = 503 ] && [ "$contenido" = "SERVICE_UNAVAILABLE" ]; }; then
+            [ "$traza" = "no" ] && [ "$t" -le "$LIMITE_MS" ] && correcto=1
+        fi
+    fi
+    printf "   %-28s HTTP %-3s en %5d ms | contenido: %-20s | traza: %-2s | %s\n" \
+        "$etiqueta" "$code" "$t" "$contenido" "$traza" "$([ "$correcto" -eq 1 ] && echo OK || echo FALLO)"
+    echo "$t $code $traza $correcto" >> "$res"
+    [ "$correcto" -eq 1 ]
 }
 
 probar_todo() {
-    : > /tmp/qa-dis-1.res
-    medir "JSF (etapa 1, EJB)" "$JSF/"
-    medir "REST vía gateway (etapa 3)" "$GATEWAY/requests" "apikey: $API_KEY"
+    local fase="$1"
+    : > "$res"
+    local fallo=0
+    medir "JSF (etapa 1, EJB)" "$JSF/" "$fase" || fallo=1
+    medir "REST via gateway (etapa 3)" "$GATEWAY/requests" "$fase" "apikey: $API_KEY" || fallo=1
+    return "$fallo"
 }
 
-echo "1) Todo arriba:"
-probar_todo
+fallo=0
+echo "1) Antes de la caida:"
+probar_todo normal || fallo=1
 reinicios_antes=$(docker inspect -f '{{.RestartCount}} {{.State.StartedAt}}' \
     "$(compose ps -q logic)" "$(compose ps -q services)" "$(compose ps -q presentation)")
 
-echo "2) Se detiene data:"
-compose stop data >/dev/null 2>&1
-probar_todo
-falla_max=$(awk '{ if ($1 > m) m = $1 } END { print m + 0 }' /tmp/qa-dis-1.res)
-trazas=$(grep -c ' SÍ$' /tmp/qa-dis-1.res || true)
+echo "2) Deteniendo data:"
+data_detenida=1
+compose stop data >/dev/null
+probar_todo caida || fallo=1
+falla_max=$(awk '{ if ($1 > m) m = $1 } END { print m + 0 }' "$res")
+trazas=$(awk '$3 != "no" {n++} END {print n+0}' "$res")
 
-echo "3) Se reinicia solo data:"
-compose start data >/dev/null 2>&1
+echo "3) Restaurando solo data:"
+compose start data >/dev/null
 esperar_sano data 180
-probar_todo
-recuperado=$(awk '$2 == 200' /tmp/qa-dis-1.res | wc -l)
+data_detenida=0
+probar_todo normal || fallo=1
+recuperado=$(awk '$2 == 200 && $4 == 1 {n++} END {print n+0}' "$res")
 reinicios_despues=$(docker inspect -f '{{.RestartCount}} {{.State.StartedAt}}' \
     "$(compose ps -q logic)" "$(compose ps -q services)" "$(compose ps -q presentation)")
 
-echo "Peor tiempo de respuesta con data caído: $falla_max ms | respuestas con stack trace: $trazas"
-echo "Clientes que volvieron a responder 200: $recuperado de 2"
-[ "$reinicios_antes" = "$reinicios_despues" ] && echo "logic, services y presentation no se reiniciaron" \
-    || echo "ATENCIÓN: alguna otra capa se reinició"
-
-ok=1
-if [ "$falla_max" -le 6000 ] && [ "$trazas" -eq 0 ] && [ "$recuperado" -eq 2 ] \
-   && [ "$reinicios_antes" = "$reinicios_despues" ]; then ok=0; fi
-resultado $ok "falla controlada en <= 5 s (+1 s de margen) y recuperación sin reiniciar las otras capas"
-exit $ok
+echo "Mayor tiempo con data caido: ${falla_max} ms (limite ${LIMITE_MS} ms) | trazas: $trazas"
+echo "Clientes recuperados: $recuperado de 2"
+if [ "$reinicios_antes" != "$reinicios_despues" ]; then
+    echo "ATENCION: otra capa se reinicio"
+    fallo=1
+fi
+if [ "$falla_max" -gt "$LIMITE_MS" ] || [ "$trazas" -ne 0 ] || [ "$recuperado" -ne 2 ]; then
+    fallo=1
+fi
+resultado "$fallo" "errores controlados <= 5 s y recuperacion sin reiniciar otras capas"
+exit "$fallo"
